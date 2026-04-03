@@ -1,0 +1,45 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "cypher-of-healing-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-03-27",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Neon Postgres via Hyperdrive — create with:
+  // npx wrangler hyperdrive create cypher-healing-db --connection-string="postgres://USER:PASS@HOST:5432/neondb"
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "REPLACE_WITH_HYPERDRIVE_ID"
+    }
+  ],
+
+  // KV for session tokens and cache
+  "kv_namespaces": [
+    {
+      "binding": "SESSIONS",
+      "id": "REPLACE_WITH_KV_ID"
+    }
+  ],
+
+  // R2 for product images, course media, profile photos
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "cypher-healing-media"
+    }
+  ],
+
+  // Environment variables (secrets set via `wrangler secret put`)
+  "vars": {
+    "ENVIRONMENT": "development",
+    "CORS_ORIGIN": "https://cypherofhealing.com",
+    "APP_NAME": "CypherOfHealing"
+  }
+
+  // Secrets to configure:
+  // wrangler secret put STRIPE_SECRET_KEY
+  // wrangler secret put STRIPE_WEBHOOK_SECRET
+  // wrangler secret put JWT_SECRET
+  // wrangler secret put RESEND_API_KEY
+}
