@@ -5,22 +5,25 @@
   "compatibility_date": "2026-03-27",
   "compatibility_flags": ["nodejs_compat"],
 
-  // Neon Postgres via Hyperdrive — create with:
+  // TODO: Hyperdrive — create with:
   // npx wrangler hyperdrive create cypher-healing-db --connection-string="postgres://USER:PASS@HOST:5432/neondb"
-  "hyperdrive": [
-    {
-      "binding": "HYPERDRIVE",
-      "id": "REPLACE_WITH_HYPERDRIVE_ID"
-    }
-  ],
+  // Then add the ID below:
+  // "hyperdrive": [
+  //   {
+  //     "binding": "HYPERDRIVE",
+  //     "id": "YOUR_HYPERDRIVE_ID"
+  //   }
+  // ],
 
-  // KV for session tokens and cache
-  "kv_namespaces": [
-    {
-      "binding": "SESSIONS",
-      "id": "REPLACE_WITH_KV_ID"
-    }
-  ],
+  // TODO: KV for session tokens and cache
+  // Create KV namespace: npx wrangler kv:namespace create "SESSIONS"
+  // Then add below:
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "SESSIONS",
+  //     "id": "YOUR_KV_ID"
+  //   }
+  // ],
 
   // R2 for product images, course media, profile photos
   "r2_buckets": [
