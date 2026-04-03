@@ -1,21 +1,8 @@
 #:schema ./node_modules/@cloudflare/workers-types/index.d.ts
 
-name = "cypher-of-healing-pages"
+name = "cypher-of-healing"
 type = "javascript"
-main = "src/index.ts"
 compatibility_date = "2026-03-27"
-compatibility_flags = ["nodejs_compat"]
 
-# Cloudflare Pages Configuration
-pages_build_output_dir = "web/dist"
-
-# Environment
-env = "production"
-
-[build]
-command = "cd web && npm run build"
-cwd = "."
-root_dir = ""
-
-[env.production]
-name = "cypher-of-healing-pages"
+# Cloudflare Pages Configuration - only pages_build_output_dir, no "main" key
+pages_build_output_dir = "dist"

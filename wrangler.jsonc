@@ -4,9 +4,6 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-03-27",
   "compatibility_flags": ["nodejs_compat"],
-  
-  // Cloudflare Pages configuration
-  "pages_build_output_dir": "web/dist",
 
   // TODO: Hyperdrive — create with:
   // npx wrangler hyperdrive create cypher-healing-db --connection-string="postgres://USER:PASS@HOST:5432/neondb"
