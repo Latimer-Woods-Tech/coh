@@ -1,90 +1,82 @@
 # Cloudflare Pages Project Setup
 
-## Current Status
+## Current Status ✅ PAGES PROJECT CREATED
 
-The deployment configuration has been fixed, but the **Cloudflare Pages project** needs to be created manually or via Cloudflare's dashboard.
+The Cloudflare Pages project `coh` has been created. However, the **dashboard configuration needs to be updated** to use the correct build settings.
 
 ## What's Fixed ✅
 
 - ✅ Removed conflicting `main` and `pages_build_output_dir` keys from configuration
-- ✅ Created proper `web/wrangler.jsonc` for Pages deployment
+- ✅ Created `wrangler.toml` in root with proper build configuration
 - ✅ Updated GitHub Actions to use correct project name `coh`
 - ✅ Configuration now passes validation
 
-## What's Needed 🔧
+## Dashboard Configuration Required 🔧
 
-The Cloudflare Pages project `coh` needs to be created in your Cloudflare account.
+The Pages project `coh` has been created, but you need to update its build settings in the Cloudflare Pages dashboard.
 
-### Option 1: Create via Cloudflare Dashboard (Fastest)
+### Configure Pages Project Settings
 
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
-2. Navigate to **Pages**
-3. Click **Create a project**
-4. Click **Connect to Git** or **Deploy manually**
-5. Choose **Deploy manually** if you just want to set up the project
-6. Enter project name: `coh`
-7. Click **Create project**
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → **Pages**
+2. Click on the **coh** project
+3. Go to **Settings** → **Builds & Deployments**
+4. Configure these settings:
 
-Once created, push a commit to trigger the automatic deployment:
+   - **Build command**: Leave blank (will auto-detect from `wrangler.toml`)
+   - **Build output directory**: `web/dist`
+   - **Root directory**: `/` (default)
+
+5. Or set explicitly:
+   - **Build command**: `npm run build`
+   - **Build cwd**: `web`
+   - **Build output directory**: `dist`
+
+6. Click **Save**
+
+### Trigger New Deployment
+
+After updating the dashboard settings, trigger a new deployment by pushing an empty commit:
 
 ```bash
 cd /workspaces/coh
-git commit --allow-empty -m "Trigger deployment after Pages project creation"
+git commit --allow-empty -m "Trigger Pages redeploy with corrected build settings"
 git push origin main
 ```
 
-### Option 2: Create via Wrangler CLI (with OAuth)
+## If Something Goes Wrong
 
-If you have local access to Cloudflare OAuth:
+### Redeploy Tips
 
-```bash
-cd /workspaces/coh/web
-wrangler pages project create coh
+1. If the build still fails, make sure:
+   - `npm run build` works in the `web/` directory
+   - `web/dist/` is the output directory
+   - The Pages project settings match the dashboard configuration above
+
+2. To check the build logs:
+   - Go to Pages project → **Deployments**
+   - Click on the failed deployment
+   - View the build logs for specific errors
+
+### Settings Summary
+
+**File:** `/wrangler.toml` (root)
+```toml
+name = "coh"
+type = "javascript"
+compatibility_date = "2026-03-27"
+
+[build]
+command = "npm run build"
+cwd = "./web"
 ```
 
-When prompted, authorize the OAuth request in your browser.
-
-### Option 3: Create via API (requires credentials)
-
-If you have your Cloudflare Account ID and API Token, run:
-
-```bash
-curl -X POST "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/pages/projects" \
-  -H "Authorization: Bearer {API_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "coh",
-    "production_branch": "main",
-    "deployment_configs": {
-      "production": {
-        "env_vars": {}
-      },
-      "preview": {
-        "env_vars": {}
-      }
-    }
-  }'
-```
-
-## After Project Creation
-
-Once the `coh` Pages project is created in your Cloudflare account:
-
-1. The next GitHub Actions deployment will automatically deploy the frontend
-2. You'll be able to access the site at: `https://coh.pages.dev`
-3. The API will continue to be deployed at: `https://cypher-of-healing-api.workers.dev`
-
-## Troubleshooting
-
-If deployment still fails with "Project not found":
-
-1. Verify the project name is exactly `coh` (all lowercase) in Cloudflare dashboard
-2. Make sure the API token has `pages:write` permission
-3. Check that `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` GitHub secrets are correct
+The `wrangler.toml` file tells Cloudflare Pages:
+- Build command: run `npm run build`
+- Build from: `./web` directory
+- Pages will look for built files in `web/dist`
 
 ## Files Modified
 
-- `wrangler.jsonc` - Root configuration (Workers API only, no Pages config)
-- `web/wrangler.jsonc` - Pages configuration (project name: `coh`)
-- `wrangler-pages.toml` - Alternative Pages configuration
+- `wrangler.toml` - Root configuration for Pages build
+- `wrangler.jsonc` - Root configuration for Workers API (separate)
 - `.github/workflows/deploy.yml` - Updated to use project name `coh`

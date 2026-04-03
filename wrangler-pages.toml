@@ -1,8 +1,0 @@
-#:schema ./node_modules/@cloudflare/workers-types/index.d.ts
-
-name = "coh"
-type = "javascript"
-compatibility_date = "2026-03-27"
-
-# Cloudflare Pages Configuration - only pages_build_output_dir, no "main" key
-pages_build_output_dir = "dist"
