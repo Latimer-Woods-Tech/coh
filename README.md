@@ -17,6 +17,9 @@
 
 ## 📚 Documentation
 
+- **[DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md)** - ⭐ START HERE - Complete deployment checklist
+- **[API-TOKEN-SETUP.md](API-TOKEN-SETUP.md)** - Configure Cloudflare API token with correct permissions
+- **[CLOUDFLARE-PAGES-FIX.md](CLOUDFLARE-PAGES-FIX.md)** - Dashboard configuration for Pages
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Step-by-step deployment guide
 - **[DEPLOYMENT-STATUS.md](DEPLOYMENT-STATUS.md)** - Complete build & deployment status  
 - **[GITHUB-ACTIONS-SETUP.md](GITHUB-ACTIONS-SETUP.md)** - Auto-deployment configuration
@@ -26,19 +29,34 @@
 
 ## ⚡ Quick Deploy
 
-### Option A: Automatic (Recommended)
-Add GitHub secrets and every push auto-deploys:
-```bash
-# See GITHUB-ACTIONS-SETUP.md for full instructions
-```
+### ✅ Current Status
+- Frontend build: **✅ Verified working** (`web/dist/` created)
+- Backend TypeScript: **✅ Verified compiling** (no errors)
+- GitHub Actions: **✅ Configured** (auto-deploy on push)
+- Missing: Cloudflare API token with correct permissions
 
-### Option B: Manual Deployment Script
-```bash
-./deploy.sh YOUR_CLOUDFLARE_API_TOKEN YOUR_ACCOUNT_ID
-```
+### 🚀 Next Steps
+1. **[Read DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md)** (5-minute master checklist)
+2. Create Cloudflare API token with Pages + Workers permissions
+3. Update GitHub secrets: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
+4. Push a commit to trigger auto-deployment
 
-### Option C: GitHub UI Integration
-1. Go to https://dash.cloudflare.com/?to=/:account/pages
+### Manual Commands
+```bash
+# Test local build
+cd web && npm run build  # Frontend ✅
+npm run tsc --noEmit     # Backend ✅
+
+# Deploy manually (when ready)
+npx wrangler deploy      # Deploy API
+cd web && npx wrangler pages deploy dist --project-name coh  # Deploy frontend
+``
+npm run tsc --noEmit     # Backend ✅
+
+# Deploy manually (when ready)
+npx wrangler deploy      # Deploy API
+cd web && npx wrangler pages deploy dist --project-name coh  # Deploy frontend
+``
 2. Click "Connect to Git"
 3. Select this repository
 4. Set build: `cd web && npm run build` → output: `web/dist`
