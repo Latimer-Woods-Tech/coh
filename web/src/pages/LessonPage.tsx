@@ -111,10 +111,10 @@ export default function LessonPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-dark-950">
-        <div className="text-center text-white">
-          <p className="text-xl mb-4">{error}</p>
-          <Link to="/academy" className="text-primary-400 underline">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1A0E09' }}>
+        <div className="text-center">
+          <p className="text-xl mb-4" style={{ fontFamily: '"Libre Baskerville", serif', color: '#E8DCBE' }}>{error}</p>
+          <Link to="/academy" className="underline" style={{ fontFamily: 'DM Sans, sans-serif', color: '#C9A84C' }}>
             Back to Academy
           </Link>
         </div>
@@ -124,46 +124,47 @@ export default function LessonPage() {
 
   if (!course || !currentLesson) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-dark-950">
-        <div className="w-10 h-10 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1A0E09' }}>
+        <div className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#C9A84C', borderTopColor: 'transparent' }} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-dark-950 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#1A0E09' }}>
       {/* Top bar */}
-      <header className="bg-dark-900 border-b border-dark-700 px-4 py-3 flex items-center gap-4 flex-shrink-0">
+      <header className="flex items-center gap-4 px-4 py-3 flex-shrink-0" style={{ backgroundColor: '#2C1810', borderBottom: '1px solid #3D2B1F' }}>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-dark-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-dark-700"
+          className="p-2 transition-colors"
+          style={{ color: '#8B5E3C', background: 'transparent', border: 'none', cursor: 'pointer' }}
           aria-label="Toggle sidebar"
+          onMouseEnter={e => (e.currentTarget.style.color = '#F5ECD7')}
+          onMouseLeave={e => (e.currentTarget.style.color = '#8B5E3C')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <Link
-          to="/academy"
-          className="text-primary-400 hover:text-primary-300 text-sm font-medium transition-colors"
-        >
+        <Link to="/academy" className="text-sm font-medium transition-colors" style={{ fontFamily: 'DM Sans, sans-serif', color: '#C9A84C' }}>
           ← The Academy
         </Link>
-        <span className="text-dark-500 text-sm hidden md:block">/ {course.title}</span>
-        <h1 className="text-white font-semibold text-sm ml-2 truncate">{currentLesson.title}</h1>
+        <span className="text-sm hidden md:block" style={{ color: '#3D2B1F' }}>/ {course.title}</span>
+        <h1 className="text-sm font-semibold ml-2 truncate" style={{ fontFamily: '"Playfair Display", serif', color: '#E8DCBE' }}>{currentLesson.title}</h1>
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-dark-400 text-xs hidden md:block">
+          <span className="text-xs hidden md:block" style={{ fontFamily: '"IBM Plex Mono", monospace', color: '#704214' }}>
             {currentIndex + 1} of {allLessons.length}
           </span>
           {currentLesson.completed ? (
-            <span className="px-3 py-1 bg-green-900 text-green-300 rounded-full text-xs font-semibold">
+            <span className="px-3 py-1 text-xs font-semibold" style={{ fontFamily: 'DM Sans, sans-serif', backgroundColor: '#1A3A3A', color: '#C9A84C', border: '1px solid #1A3A3A' }}>
               ✓ Completed
             </span>
           ) : (
             <button
               onClick={markComplete}
               disabled={markingComplete}
-              className="px-4 py-1.5 bg-primary-500 text-white rounded-full text-xs font-semibold hover:bg-primary-400 transition-colors disabled:opacity-50"
+              className="px-4 py-1.5 text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-80 disabled:opacity-50"
+              style={{ fontFamily: 'DM Sans, sans-serif', backgroundColor: '#C9A84C', color: '#2C1810', border: 'none', cursor: 'pointer', letterSpacing: '0.08em' }}
             >
               {markingComplete ? 'Saving…' : 'Mark Complete'}
             </button>
@@ -177,41 +178,39 @@ export default function LessonPage() {
           {sidebarOpen && (
             <motion.aside
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
+              animate={{ width: 300, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.25, ease: 'easeInOut' }}
-              className="bg-dark-900 border-r border-dark-700 overflow-y-auto flex-shrink-0"
+              className="overflow-y-auto flex-shrink-0"
+              style={{ backgroundColor: '#2C1810', borderRight: '1px solid #3D2B1F' }}
             >
-              <div className="p-4 min-w-[320px]">
-                <h2 className="text-white font-serif font-bold text-lg mb-4">{course.title}</h2>
+              <div className="p-5" style={{ minWidth: '300px' }}>
+                <h2 className="font-bold text-base mb-5" style={{ fontFamily: '"Playfair Display", serif', color: '#F5ECD7' }}>{course.title}</h2>
                 {course.modules.map((mod, mIdx) => (
                   <div key={mod.id} className="mb-6">
-                    <div className="text-xs uppercase tracking-widest text-primary-500 font-bold mb-2 px-2">
+                    <div className="text-xs uppercase tracking-widest font-bold mb-2 px-2" style={{ fontFamily: '"IBM Plex Mono", monospace', color: '#C9A84C', letterSpacing: '0.15em' }}>
                       Station {mIdx + 1}: {mod.title}
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       {mod.lessons.map((lesson) => (
                         <Link
                           key={lesson.id}
                           to={`/academy/${courseSlug}/${lesson.id}`}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                            lesson.id === currentLesson.id
-                              ? 'bg-primary-600 text-white'
-                              : 'text-dark-300 hover:bg-dark-700 hover:text-white'
-                          }`}
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors"
+                          style={{
+                            fontFamily: '"Libre Baskerville", serif',
+                            backgroundColor: lesson.id === currentLesson.id ? '#3D2B1F' : 'transparent',
+                            borderLeft: lesson.id === currentLesson.id ? '3px solid #C9A84C' : '3px solid transparent',
+                            color: lesson.id === currentLesson.id ? '#F5ECD7' : '#8B5E3C',
+                            textDecoration: 'none',
+                          }}
                         >
-                          <span className="flex-shrink-0">
-                            {lesson.completed ? (
-                              <span className="text-green-400 text-xs">✓</span>
-                            ) : lesson.contentType === 'video' ? (
-                              <span className="text-xs">▶</span>
-                            ) : (
-                              <span className="text-xs">📄</span>
-                            )}
+                          <span className="flex-shrink-0" style={{ color: lesson.completed ? '#C9A84C' : '#704214', fontSize: '0.7rem' }}>
+                            {lesson.completed ? '✓' : lesson.contentType === 'video' ? '▶' : '◈'}
                           </span>
                           <span className="truncate">{lesson.title}</span>
                           {lesson.durationMinutes && (
-                            <span className="text-xs opacity-50 ml-auto flex-shrink-0">
+                            <span className="text-xs ml-auto flex-shrink-0" style={{ fontFamily: '"IBM Plex Mono", monospace', color: '#704214', opacity: 0.6 }}>
                               {lesson.durationMinutes}m
                             </span>
                           )}
@@ -226,12 +225,12 @@ export default function LessonPage() {
         </AnimatePresence>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#1A0E09' }}>
           <div className="max-w-4xl mx-auto p-6 md:p-10">
 
             {/* Video Player */}
             {currentLesson.contentType === 'video' && currentLesson.videoUrl && (
-              <div className="aspect-video bg-black rounded-2xl overflow-hidden mb-8 shadow-2xl">
+              <div className="aspect-video overflow-hidden mb-8" style={{ backgroundColor: '#000', border: '1px solid #3D2B1F' }}>
                 <iframe
                   src={currentLesson.videoUrl}
                   className="w-full h-full"
@@ -243,34 +242,29 @@ export default function LessonPage() {
             )}
 
             {currentLesson.contentType === 'video' && !currentLesson.videoUrl && (
-              <div className="aspect-video bg-dark-800 rounded-2xl flex items-center justify-center mb-8">
-                <div className="text-center text-dark-400">
-                  <div className="text-5xl mb-3">▶</div>
-                  <p className="text-sm">Video content coming soon</p>
+              <div className="aspect-video flex items-center justify-center mb-8" style={{ backgroundColor: '#2C1810', border: '1px solid #3D2B1F' }}>
+                <div className="text-center">
+                  <div className="text-5xl mb-3" style={{ color: '#704214' }}>▶</div>
+                  <p className="text-sm" style={{ fontFamily: 'DM Sans, sans-serif', color: '#8B5E3C' }}>Video content coming soon</p>
                 </div>
               </div>
             )}
 
             {/* Lesson header */}
-            <motion.div
-              key={currentLesson.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
+            <motion.div key={currentLesson.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
               <div className="flex items-center gap-3 mb-2">
-                <span className="text-xs uppercase tracking-widest text-primary-500 font-bold">
+                <span className="text-xs uppercase tracking-widest font-bold" style={{ fontFamily: '"IBM Plex Mono", monospace', color: '#C9A84C', letterSpacing: '0.15em' }}>
                   {currentLesson.contentType}
                 </span>
                 {currentLesson.durationMinutes && (
-                  <span className="text-dark-400 text-xs">· {currentLesson.durationMinutes} min</span>
+                  <span className="text-xs" style={{ fontFamily: '"IBM Plex Mono", monospace', color: '#704214' }}>· {currentLesson.durationMinutes} min</span>
                 )}
               </div>
-              <h2 className="text-3xl font-serif font-bold text-white mb-4">
+              <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: '"Playfair Display", serif', color: '#F5ECD7' }}>
                 {currentLesson.title}
               </h2>
               {currentLesson.description && (
-                <p className="text-dark-300 text-lg leading-relaxed mb-8">
+                <p className="text-lg leading-relaxed mb-8" style={{ fontFamily: '"Libre Baskerville", serif', color: '#8B5E3C' }}>
                   {currentLesson.description}
                 </p>
               )}
@@ -278,18 +272,20 @@ export default function LessonPage() {
               {/* Text content */}
               {currentLesson.contentType === 'text' && currentLesson.textContent && (
                 <div
-                  className="prose prose-invert prose-lg max-w-none text-dark-200 leading-relaxed"
+                  className="prose-lg max-w-none leading-relaxed"
+                  style={{ fontFamily: '"Libre Baskerville", serif', color: '#E8DCBE', lineHeight: 1.85 }}
                   dangerouslySetInnerHTML={{ __html: currentLesson.textContent }}
                 />
               )}
             </motion.div>
 
             {/* Navigation */}
-            <div className="flex items-center justify-between mt-12 pt-8 border-t border-dark-700">
+            <div className="flex items-center justify-between mt-12 pt-8" style={{ borderTop: '1px solid #3D2B1F' }}>
               {prevLesson ? (
                 <Link
                   to={`/academy/${courseSlug}/${prevLesson.id}`}
-                  className="flex items-center gap-2 text-dark-400 hover:text-white transition-colors text-sm group"
+                  className="flex items-center gap-2 text-sm group transition-colors"
+                  style={{ color: '#8B5E3C', textDecoration: 'none', fontFamily: 'DM Sans, sans-serif' }}
                 >
                   <span className="group-hover:-translate-x-1 transition-transform">←</span>
                   <span className="truncate max-w-[200px]">{prevLesson.title}</span>
@@ -302,7 +298,8 @@ export default function LessonPage() {
                 <button
                   onClick={markComplete}
                   disabled={markingComplete}
-                  className="px-6 py-2.5 bg-primary-500 text-white rounded-full font-semibold hover:bg-primary-400 transition-colors disabled:opacity-50"
+                  className="px-6 py-2.5 font-bold text-sm uppercase tracking-widest transition-opacity hover:opacity-80 disabled:opacity-50"
+                  style={{ fontFamily: 'DM Sans, sans-serif', backgroundColor: '#C9A84C', color: '#2C1810', border: 'none', cursor: 'pointer', letterSpacing: '0.1em' }}
                 >
                   {markingComplete ? 'Saving…' : nextLesson ? 'Complete & Continue →' : 'Complete Course ✓'}
                 </button>
@@ -311,7 +308,8 @@ export default function LessonPage() {
               {nextLesson ? (
                 <Link
                   to={`/academy/${courseSlug}/${nextLesson.id}`}
-                  className="flex items-center gap-2 text-dark-400 hover:text-white transition-colors text-sm group"
+                  className="flex items-center gap-2 text-sm group transition-colors"
+                  style={{ color: '#8B5E3C', textDecoration: 'none', fontFamily: 'DM Sans, sans-serif' }}
                 >
                   <span className="truncate max-w-[200px]">{nextLesson.title}</span>
                   <span className="group-hover:translate-x-1 transition-transform">→</span>

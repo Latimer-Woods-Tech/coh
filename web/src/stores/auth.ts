@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthStore>((set) => {
     token: savedToken,
     isLoading: false,
 
-    login: async (email: string, password: string) => {
+    login: async (_email: string, _password: string) => {
       set({ isLoading: true });
       try {
         // TODO: Call API endpoint

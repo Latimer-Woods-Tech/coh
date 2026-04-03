@@ -1,71 +1,136 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { useCartStore } from '@/stores/cart';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const NAV = [
+  { label: 'The Chair',   path: '/booking' },
+  { label: 'The Vault',   path: '/store'   },
+  { label: 'The Academy', path: '/academy' },
+  { label: 'The Stage',   path: '/events'  },
+];
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const cartItems = useCartStore((state) => state.items);
+  const location = useLocation();
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-primary-100 shadow-md hover:shadow-lg transition-shadow">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+    <header
+      className="sticky top-0 z-50"
+      style={{
+        backgroundColor: 'rgba(44, 24, 16, 0.97)',
+        borderBottom: '1px solid rgba(201,168,76,0.25)',
+        backdropFilter: 'blur(12px)',
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+        <div className="flex justify-between items-center h-18 py-4">
+
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow transform group-hover:scale-105">
-              <span className="text-white font-serif font-bold text-xl">✨</span>
+          <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
+            {/* Cipher mark — concentric circle glyph */}
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 border"
+              style={{ borderColor: '#C9A84C', background: 'transparent' }}
+            >
+              <div
+                className="w-5 h-5 rounded-full border flex items-center justify-center"
+                style={{ borderColor: '#C9A84C' }}
+              >
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#C9A84C' }} />
+              </div>
             </div>
-            <div className="hidden sm:block">
-              <span className="font-serif font-bold text-xl text-dark-900 block">Cypher of Healing</span>
-              <span className="text-xs text-primary-600 font-medium">Transform Within</span>
+            <div>
+              <span
+                className="block font-bold tracking-wide leading-none"
+                style={{
+                  fontFamily: '"Playfair Display", Georgia, serif',
+                  color: '#F5ECD7',
+                  fontSize: '17px',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                CypherOfHealing
+              </span>
+              <span
+                className="block"
+                style={{
+                  fontFamily: '"DM Sans", sans-serif',
+                  color: '#8B5E3C',
+                  fontSize: '10px',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  marginTop: '1px',
+                }}
+              >
+                The Factory · 2026
+              </span>
             </div>
           </Link>
 
-          {/* Navigation */}
+          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link to="/booking" className="text-dark-700 hover:text-primary-600 font-medium transition relative group">
-              Booking
-              <span className="absolute bottom-0 left-0 w-0 h-1 bg-primary-500 transition-all group-hover:w-full rounded-full"></span>
-            </Link>
-            <Link to="/store" className="text-dark-700 hover:text-primary-600 font-medium transition relative group">
-              Shop
-              <span className="absolute bottom-0 left-0 w-0 h-1 bg-primary-500 transition-all group-hover:w-full rounded-full"></span>
-            </Link>
-            <Link to="/academy" className="text-dark-700 hover:text-primary-600 font-medium transition relative group">
-              Academy
-              <span className="absolute bottom-0 left-0 w-0 h-1 bg-primary-500 transition-all group-hover:w-full rounded-full"></span>
-            </Link>
-            <Link to="/events" className="text-dark-700 hover:text-primary-600 font-medium transition relative group">
-              Events
-              <span className="absolute bottom-0 left-0 w-0 h-1 bg-primary-500 transition-all group-hover:w-full rounded-full"></span>
-            </Link>
+            {NAV.map(({ label, path }) => {
+              const active = location.pathname === path;
+              return (
+                <Link
+                  key={path}
+                  to={path}
+                  style={{
+                    fontFamily: '"DM Sans", sans-serif',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: active ? '#C9A84C' : '#E8DCBE',
+                    borderBottom: active ? '1px solid #C9A84C' : '1px solid transparent',
+                    paddingBottom: '2px',
+                    transition: 'color 0.2s, border-color 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) (e.currentTarget as HTMLElement).style.color = '#C9A84C';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) (e.currentTarget as HTMLElement).style.color = '#E8DCBE';
+                  }}
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Right Section */}
-          <div className="flex items-center gap-6">
+          {/* Right controls */}
+          <div className="flex items-center gap-5">
             {/* Cart */}
-            <Link
-              to="/store"
-              className="relative p-2 text-dark-700 hover:text-primary-600 transition hover:scale-110"
-            >
+            <Link to="/store" className="relative" aria-label="Cart">
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5"
                 fill="none"
-                stroke="currentColor"
+                stroke="#E8DCBE"
+                strokeWidth={1.5}
                 viewBox="0 0 24 24"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 8m10 0l2-8m0 0h6"
+                  d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
                 />
               </svg>
               {cartItems.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
+                <span
+                  className="absolute -top-2 -right-2 w-4 h-4 rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: '#C9A84C',
+                    color: '#2C1810',
+                    fontFamily: '"DM Sans", sans-serif',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                  }}
+                >
                   {cartItems.length}
                 </span>
               )}
@@ -73,44 +138,40 @@ export default function Header() {
 
             {/* Auth */}
             {user ? (
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-dark-700 font-medium">Welcome, {user.name?.split(' ')[0]}</span>
-                <button
-                  onClick={() => {
-                    logout();
-                    window.location.href = '/';
-                  }}
-                  className="text-sm text-dark-700 hover:text-primary-600 transition font-medium"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <Link 
-                to="/login" 
-                className="hidden sm:inline-block text-sm font-bold text-primary-600 hover:text-primary-700 transition relative group"
+              <button
+                onClick={() => { logout(); window.location.href = '/'; }}
+                style={{
+                  fontFamily: '"DM Sans", sans-serif',
+                  fontSize: '12px',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: '#8B5E3C',
+                }}
+                className="hidden sm:block hover:opacity-70 transition-opacity"
               >
-                Sign In
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary-600 transition-all group-hover:w-full rounded-full"></span>
+                Sign Out
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="hidden sm:block btn-primary btn"
+                style={{ padding: '0.5rem 1.25rem', fontSize: '12px' }}
+              >
+                Begin Your Session
               </Link>
             )}
 
-            {/* Mobile menu button */}
+            {/* Mobile hamburger */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-dark-700 hover:text-primary-600 rounded-lg hover:bg-primary-50 transition"
+              className="md:hidden p-1"
+              aria-label="Menu"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-6 h-6" fill="none" stroke="#E8DCBE" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
-                  d={isMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
+                  d={isMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5'}
                 />
               </svg>
             </button>
@@ -118,28 +179,50 @@ export default function Header() {
         </div>
 
         {/* Mobile menu */}
-        {isMenuOpen && (
-          <motion.nav
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="md:hidden pb-4 flex flex-col gap-4"
-          >
-            <Link to="/booking" className="text-dark-700 hover:text-primary-600 font-medium">
-              Booking
-            </Link>
-            <Link to="/store" className="text-dark-700 hover:text-primary-500">
-              Shop
-            </Link>
-            <Link to="/academy" className="text-dark-700 hover:text-primary-500">
-              Academy
-            </Link>
-            <Link to="/events" className="text-dark-700 hover:text-primary-500">
-              Events
-            </Link>
-          </motion.nav>
-        )}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.nav
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden overflow-hidden"
+              style={{ borderTop: '1px solid rgba(201,168,76,0.15)' }}
+            >
+              <div className="py-4 flex flex-col gap-1">
+                {NAV.map(({ label, path }) => (
+                  <Link
+                    key={path}
+                    to={path}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="py-3 px-2 transition-colors"
+                    style={{
+                      fontFamily: '"DM Sans", sans-serif',
+                      fontSize: '13px',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      color: location.pathname === path ? '#C9A84C' : '#E8DCBE',
+                      borderBottom: '1px solid rgba(201,168,76,0.1)',
+                    }}
+                  >
+                    {label}
+                  </Link>
+                ))}
+                {!user && (
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="mt-3 btn btn-primary text-center"
+                    style={{ fontSize: '12px' }}
+                  >
+                    Begin Your Session
+                  </Link>
+                )}
+              </div>
+            </motion.nav>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );
 }
+

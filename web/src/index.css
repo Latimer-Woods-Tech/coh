@@ -2,111 +2,251 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── CSS Custom Properties ─── */
+:root {
+  --heritage:    #2C1810;
+  --heritage-lt: #3D2B1F;
+  --sepia:       #704214;
+  --gold:        #C9A84C;
+  --gold-dark:   #A8893E;
+  --gold-pale:   #F0E4B8;
+  --ivory:       #F5ECD7;
+  --parchment:   #E8DCBE;
+  --tobacco:     #8B5E3C;
+  --ember:       #A0522D;
+  --teal:        #1A3A3A;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-serif:   'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  --font-sans:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'IBM Plex Mono', Menlo, monospace;
+}
+
+/* ─── Base ─── */
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-dark-50 text-dark-900 transition-colors duration-200;
+  background-color: var(--ivory);
+  color: var(--heritage);
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Headings */
+/* ─── Type ─── */
 h1, h2, h3, h4, h5, h6 {
-  @apply font-serif font-bold tracking-tight;
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
 }
 
-h1 {
-  @apply text-4xl md:text-5xl lg:text-6xl;
+p, li {
+  font-family: var(--font-serif);
 }
 
-h2 {
-  @apply text-3xl md:text-4xl;
+/* ─── Section rhythm ─── */
+.section-dark {
+  background-color: var(--heritage);
+  color: var(--ivory);
 }
 
-h3 {
-  @apply text-2xl md:text-3xl;
+.section-light {
+  background-color: var(--ivory);
+  color: var(--heritage);
 }
 
-/* Buttons */
+.section-parchment {
+  background-color: var(--parchment);
+  color: var(--heritage);
+}
+
+/* ─── Divider ─── */
+.divider-gold {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--gold);
+}
+.divider-gold::before,
+.divider-gold::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--gold);
+  opacity: 0.4;
+}
+
+/* ─── Buttons — Harlem Renaissance style ─── */
 .btn {
-  @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 inline-flex items-center justify-center gap-2 cursor-pointer;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.75rem 1.75rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-primary {
-  @apply bg-primary-500 text-white hover:bg-primary-600 active:scale-95;
+  background-color: var(--gold);
+  color: var(--heritage);
+  border: none;
 }
-
-.btn-secondary {
-  @apply bg-dark-200 text-dark-900 hover:bg-dark-300 active:scale-95;
+.btn-primary:hover {
+  background-color: var(--gold-dark);
+  color: var(--ivory);
+}
+.btn-primary:active {
+  transform: scale(0.97);
 }
 
 .btn-outline {
-  @apply border-2 border-primary-500 text-primary-500 hover:bg-primary-50 active:scale-95;
+  background: transparent;
+  border: 1px solid var(--sepia);
+  color: var(--sepia);
+}
+.btn-outline:hover {
+  background-color: var(--parchment);
 }
 
-/* Forms */
-.input {
-  @apply w-full px-4 py-3 rounded-lg border border-dark-300 bg-white text-dark-900
-    placeholder-dark-500 transition-all duration-200
-    focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200;
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
-.input:disabled {
-  @apply bg-dark-100 text-dark-500 cursor-not-allowed;
-}
-
-.textarea {
-  @apply resize-none font-sans;
-}
-
-/* Cards */
+/* ─── Cards ─── */
 .card {
-  @apply bg-white rounded-xl shadow-sm border border-dark-100 transition-all duration-200 hover:shadow-md;
+  background-color: var(--parchment);
+  border: 1px solid var(--tobacco);
+  border-radius: 3px;
+  transition: all 0.2s ease;
 }
 
-.card-hover {
-  @apply hover:-translate-y-1;
+.card-dark {
+  background-color: var(--heritage-lt);
+  border: none;
+  border-left: 3px solid var(--gold);
+  border-radius: 3px;
 }
 
-/* Badge */
+.card-hover:hover {
+  transform: translateY(-4px);
+}
+
+/* ─── Forms ─── */
+.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--ivory);
+  border: 1px solid var(--tobacco);
+  border-radius: 3px;
+  color: var(--heritage);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+}
+.input::placeholder {
+  color: var(--tobacco);
+  opacity: 0.7;
+}
+.input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.15);
+}
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Badges ─── */
 .badge {
-  @apply inline-flex px-3 py-1 rounded-full text-sm font-medium;
+  display: inline-flex;
+  padding: 0.2rem 0.75rem;
+  border-radius: 2px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .badge-primary {
-  @apply bg-primary-100 text-primary-700;
+  background-color: var(--gold-pale);
+  color: var(--sepia);
+  border: 1px solid var(--gold);
 }
 
 .badge-success {
-  @apply bg-green-100 text-green-700;
+  background-color: #D4EDDA;
+  color: #1A4D2E;
 }
 
-.badge-warning {
-  @apply bg-yellow-100 text-yellow-700;
+.badge-teal {
+  background-color: var(--teal);
+  color: var(--ivory);
 }
 
-.badge-error {
-  @apply bg-red-100 text-red-700;
+/* ─── Aaron Douglas SVG patterns ─── */
+.pattern-circles {
+  background-image: radial-gradient(circle, var(--tobacco) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, transparent 24px, var(--tobacco) 24px, var(--tobacco) 25px, transparent 25px),
+    radial-gradient(circle at 50% 50%, transparent 44px, var(--tobacco) 44px, var(--tobacco) 45px, transparent 45px);
+  background-size: 60px 60px;
+  background-repeat: repeat;
+  opacity: 0.04;
 }
 
-/* Animations */
+/* ─── Gold diamond divider ─── */
+.gold-rule {
+  text-align: center;
+  color: var(--gold);
+  font-size: 0.75rem;
+  letter-spacing: 0.5em;
+  opacity: 0.7;
+  user-select: none;
+}
+
+/* ─── Shimmer ─── */
 @keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
+  0%   { background-position: -1000px 0; }
+  100% { background-position:  1000px 0; }
 }
-
 .shimmer {
   animation: shimmer 2s infinite;
-  background: linear-gradient(
-    to right,
-    #f3ebe1 0%,
-    #f9f5f0 20%,
-    #f3ebe1 40%,
-    #f3ebe1 100%
-  );
+  background: linear-gradient(to right, var(--parchment) 0%, var(--ivory) 20%, var(--parchment) 40%, var(--parchment) 100%);
   background-size: 1000px 100%;
+}
+
+/* ─── Gordon Parks image treatment ─── */
+.parks-img {
+  filter: sepia(0.75) contrast(1.1) brightness(0.92) saturate(0.3);
+}
+.parks-img-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.parks-img-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(44, 24, 16, 0.45) 100%);
+  pointer-events: none;
 }
