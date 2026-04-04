@@ -7,11 +7,13 @@ import type { Env, Variables } from './types/env';
 import { responseMiddleware, errorResponse } from './middleware/response';
 import { createErrorHandler, ErrorCodes } from './middleware/errors';
 
+import auth from './routes/auth';
 import booking from './routes/booking';
 import store from './routes/store';
 import academy from './routes/academy';
 import events from './routes/events';
 import adminCourse from './routes/admin-course';
+import adminSeed from './routes/admin-seed';
 import comms from './routes/communications';
 import adminAudio from './routes/admin-audio';
 
@@ -111,11 +113,14 @@ app.get('/api/docs', (c) => {
 });
 
 // ─── API Routes ───
+// ─── Route Mounting ───
+app.route('/api/auth', auth);
 app.route('/api/booking', booking);
 app.route('/api/store', store);
 app.route('/api/academy', academy);
 app.route('/api/events', events);
 app.route('/api/admin', adminCourse);
+app.route('/api/admin/seed', adminSeed);
 app.route('/api/comms', comms);
 app.route('/api/admin/audio', adminAudio);
 
