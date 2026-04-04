@@ -12,6 +12,8 @@ import store from './routes/store';
 import academy from './routes/academy';
 import events from './routes/events';
 import adminCourse from './routes/admin-course';
+import comms from './routes/communications';
+import adminAudio from './routes/admin-audio';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 const isDev = process.env.ENVIRONMENT === 'development';
@@ -114,6 +116,8 @@ app.route('/api/store', store);
 app.route('/api/academy', academy);
 app.route('/api/events', events);
 app.route('/api/admin', adminCourse);
+app.route('/api/comms', comms);
+app.route('/api/admin/audio', adminAudio);
 
 // ─── 404 handler ───
 app.notFound((c) => {

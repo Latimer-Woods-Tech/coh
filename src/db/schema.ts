@@ -25,7 +25,6 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash'),                    // null for magic-link-only users
   name: varchar('name', { length: 255 }).notNull(),
-  phone: varchar('phone', { length: 20 }),
   avatarUrl: text('avatar_url'),
   role: userRoleEnum('role').default('client').notNull(),
 
@@ -34,6 +33,12 @@ export const users = pgTable('users', {
 
   // Membership
   membershipTier: membershipTierEnum('membership_tier').default('free').notNull(),
+
+  // Communication (SMS, voice calls)
+  phone: varchar('phone', { length: 20 }),
+  smsOptIn: boolean('sms_opt_in').default(false),
+  voiceOptIn: boolean('voice_opt_in').default(false),
+  telnyxContactId: varchar('telnyx_contact_id', { length: 255 }),
 
   // Preferences (hair type, product preferences, communication prefs)
   preferences: jsonb('preferences').default({}),
@@ -98,7 +103,11 @@ export const appointments = pgTable('appointments', {
 
   // Reminders
   reminderSentAt: timestamp('reminder_sent_at'),
+  reminderChannel: varchar('reminder_channel', { length: 20 }),  // 'sms', 'email', 'both'
   followUpSentAt: timestamp('follow_up_sent_at'),
+
+  // Telnyx integration
+  telnyxMessageId: varchar('telnyx_message_id', { length: 255 }),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -253,6 +262,12 @@ export const lessons = pgTable('lessons', {
   durationMinutes: integer('duration_minutes'),
   sortOrder: integer('sort_order').default(0).notNull(),
   isFree: boolean('is_free').default(false),                // free preview lessons
+
+  // Audio narration (Eleven Labs TTS)
+  audioNarrationUrl: text('audio_narration_url'),           // narrated audio file
+  audioNarrationDurationSeconds: integer('audio_narration_duration_seconds'),
+  hasVisualElements: boolean('has_visual_elements').default(false), // interactive visuals, slides
+  hasTranscript: boolean('has_transcript').default(false),  // text transcript for a11y
 });
 
 export const enrollments = pgTable('enrollments', {
@@ -307,9 +322,11 @@ export const events = pgTable('events', {
   durationMinutes: integer('duration_minutes'),
   timezone: varchar('timezone', { length: 50 }).default('America/New_York'),
 
-  // Meeting link (Zoom, Google Meet, etc.)
+  // Meeting link (Telnyx RTC, Zoom, Google Meet, etc.)
   meetingUrl: text('meeting_url'),
   meetingId: varchar('meeting_id', { length: 255 }),
+  telnyxRoomName: varchar('telnyx_room_name', { length: 255 }), // Telnyx RTC room
+  telnyxRoomId: varchar('telnyx_room_id', { length: 255 }),
 
   // Pricing (null = free event)
   price: decimal('price', { precision: 10, scale: 2 }),

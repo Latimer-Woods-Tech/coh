@@ -36,3 +36,51 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
+
+// ─── Lesson API helpers ───
+export const lessonApi = {
+  // Get a specific lesson with full content (video, audio, transcript)
+  getLesson: (lessonId: string) =>
+    apiClient.get(`/academy/lessons/${lessonId}`),
+
+  // Get all lessons for a course
+  getLessonsForCourse: (courseId: string) =>
+    apiClient.get(`/academy/courses/${courseId}/lessons`),
+
+  // Mark lesson as complete
+  completeLesson: (lessonId: string, watchTimeSeconds: number = 0) =>
+    apiClient.post(`/academy/lessons/${lessonId}/complete`, {
+      watchTimeSeconds,
+    }),
+
+  // Get lesson transcript
+  getTranscript: (lessonId: string) =>
+    apiClient.get(`/academy/lessons/${lessonId}/transcript`),
+
+  // Stream audio (returns a Promise<Blob> for playback)
+  getAudioStream: async (audioUrl: string) => {
+    const response = await axios.get(audioUrl, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+};
+
+// ─── Communications API helpers ───
+export const commsApi = {
+  // Send appointment reminders (admin only)
+  sendAppointmentReminders: () =>
+    apiClient.post('/comms/appointments/send-reminders'),
+
+  // Send event reminders (admin only)
+  sendEventReminders: () =>
+    apiClient.post('/comms/events/send-reminders'),
+
+  // Create video room for event (admin only)
+  createEventVideoRoom: (eventId: string) =>
+    apiClient.post(`/comms/events/${eventId}/video-room`),
+
+  // Get video room token for event (user)
+  getEventVideoRoom: (eventId: string) =>
+    apiClient.get(`/comms/events/${eventId}/video-room`),
+};

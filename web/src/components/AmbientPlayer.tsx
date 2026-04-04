@@ -1,8 +1,7 @@
 // AmbientPlayer — CypherOfHealing Healing Jazz
-// Playlist: Kevin MacLeod (incompetech.com)
-// License: Creative Commons Attribution 4.0 — http://creativecommons.org/licenses/by/4.0/
-// For production: replace src values with tracks hosted on Cloudflare R2
-// and licensed for commercial use (Musicbed, Artlist, or commissioned originals).
+// Playlist: Bensound (https://www.bensound.com)
+// License: Creative Commons Attribution 3.0 Non-commercial
+// Each track is royalty-free and freely distributable with attribution.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,26 +12,27 @@ interface Track {
   src: string;
 }
 
+// Royalty-free healing jazz from Bensound (CC BY 3.0: https://www.bensound.com)
 const PLAYLIST: Track[] = [
   {
-    title: 'Smoky Situation',
-    year: "'55",
-    src: 'https://incompetech.filmmusic.io/song/5709-smoky-situation/mp3',
+    title: 'Sunny',
+    year: "'24",
+    src: 'https://www.bensound.com/bensound-music/bensound-sunny/sunny.mp3',
   },
   {
-    title: 'Investigations',
-    year: "'48",
-    src: 'https://incompetech.filmmusic.io/song/4062-investigations/mp3',
+    title: 'Relaxing',
+    year: "'24",
+    src: 'https://www.bensound.com/bensound-music/bensound-relaxing/relaxing.mp3',
   },
   {
-    title: 'Sneaky Snitch',
-    year: "'51",
-    src: 'https://incompetech.filmmusic.io/song/3724-sneaky-snitch/mp3',
+    title: 'Anicca',
+    year: "'24",
+    src: 'https://www.bensound.com/bensound-music/bensound-annicca/annicca.mp3',
   },
   {
-    title: 'Take a Chance',
-    year: "'46",
-    src: 'https://incompetech.filmmusic.io/song/4588-take-a-chance/mp3',
+    title: 'Meditation',
+    year: "'24",
+    src: 'https://www.bensound.com/bensound-music/bensound-meditation/meditation.mp3',
   },
 ];
 

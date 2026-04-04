@@ -21,6 +21,18 @@ function Threshold() {
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: '#2C1810' }}
     >
+      {/* Background image - contemplative man's portrait */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1600&auto=format&fit=crop&q=60)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 30%',
+          backgroundAttachment: 'fixed',
+          opacity: 0.25,
+        }}
+      />
+      
       {/* Sepia vignette overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -344,7 +356,6 @@ function TheCraft() {
                 <img
                   src={s.photo}
                   alt={s.label}
-                  loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{ filter: 'sepia(0.5) contrast(1.15) brightness(0.72) saturate(0.6)' }}
                 />
