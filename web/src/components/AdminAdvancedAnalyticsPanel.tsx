@@ -9,7 +9,6 @@ import { AnalyticsMetric } from '@/types/admin';
 
 export default function AdminAdvancedAnalyticsPanel() {
   const [metrics, setMetrics] = useState<AnalyticsMetric[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,15 +17,12 @@ export default function AdminAdvancedAnalyticsPanel() {
 
   const loadAnalytics = async () => {
     try {
-      setIsLoading(true);
       const data = (await adminApi.getAnalyticsSummary()) as any;
       setMetrics(data || []);
       setError(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to load analytics';
       setError(msg);
-    } finally {
-      setIsLoading(false);
     }
   };
 

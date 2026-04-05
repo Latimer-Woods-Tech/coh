@@ -86,7 +86,7 @@ export default function AdminContentPanel() {
       sortable: true,
       render: (value, row) => (
         <div>
-          <p style={{ fontWeight: 600, color: '#F5ECD7' }}>{value}</p>
+          <p style={{ fontWeight: 600, color: '#F5ECD7' }}>{String(value)}</p>
           <p className="text-xs" style={{ color: '#704214' }}>
             {row.courseName}
           </p>
@@ -96,12 +96,12 @@ export default function AdminContentPanel() {
     {
       key: 'moduleName',
       label: 'Module',
-      render: (value) => value || '—',
+      render: (value): React.ReactNode => String(value || '—'),
     },
     {
       key: 'contentType',
       label: 'Type',
-      render: (value) => (
+      render: (value): React.ReactNode => (
         <span
           style={{
             backgroundColor: '#3D2B1F',
@@ -112,14 +112,14 @@ export default function AdminContentPanel() {
             fontWeight: 'bold',
           }}
         >
-          {value}
+          {String(value)}
         </span>
       ),
     },
     {
       key: 'status',
       label: 'Status',
-      render: (value) => (
+      render: (value): React.ReactNode => (
         <span
           className="px-2 py-1 rounded text-xs font-semibold"
           style={{
@@ -137,14 +137,14 @@ export default function AdminContentPanel() {
                   : '#999',
           }}
         >
-          {value}
+          {String(value)}
         </span>
       ),
     },
     {
       key: 'updatedAt',
       label: 'Updated',
-      render: (value) => new Date(value as string).toLocaleDateString(),
+      render: (value): React.ReactNode => new Date(value as string).toLocaleDateString(),
     },
   ];
 

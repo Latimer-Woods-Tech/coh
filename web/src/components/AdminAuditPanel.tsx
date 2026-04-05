@@ -56,7 +56,7 @@ export default function AdminAuditPanel() {
     {
       key: 'action',
       label: 'Action',
-      render: (value) => (
+      render: (value): React.ReactNode => (
         <span
           style={{
             backgroundColor: '#3D2B1F',
@@ -68,7 +68,7 @@ export default function AdminAuditPanel() {
             textTransform: 'uppercase',
           }}
         >
-          {value}
+          {String(value)}
         </span>
       ),
     },
@@ -79,16 +79,16 @@ export default function AdminAuditPanel() {
     {
       key: 'status',
       label: 'Status',
-      render: (value) => (
+      render: (value): React.ReactNode => (
         <span style={{ color: value === 'success' ? '#4CAF50' : '#F44336', fontWeight: 'bold' }}>
-          {value === 'success' ? '✓' : '✗'} {value}
+          {value === 'success' ? '✓' : '✗'} {String(value)}
         </span>
       ),
     },
     {
       key: 'createdAt',
       label: 'Time',
-      render: (value) => new Date(value as string).toLocaleString(),
+      render: (value): React.ReactNode => new Date(value as string).toLocaleString(),
     },
   ];
 
@@ -98,7 +98,7 @@ export default function AdminAuditPanel() {
       label: 'User',
       render: (value, row) => (
         <div>
-          <p style={{ fontWeight: 600, color: '#F5ECD7' }}>{value}</p>
+          <p style={{ fontWeight: 600, color: '#F5ECD7' }}>{String(value)}</p>
           <p className="text-xs" style={{ color: '#704214' }}>
             {row.email}
           </p>
@@ -108,7 +108,7 @@ export default function AdminAuditPanel() {
     {
       key: 'success',
       label: 'Result',
-      render: (value) => (
+      render: (value): React.ReactNode => (
         <span style={{ color: value ? '#4CAF50' : '#F44336', fontWeight: 'bold' }}>
           {value ? '✓ Success' : '✗ Failed'}
         </span>
@@ -117,17 +117,17 @@ export default function AdminAuditPanel() {
     {
       key: 'ipAddress',
       label: 'IP Address',
-      render: (value) => value || '—',
+      render: (value): React.ReactNode => String(value || '—'),
     },
     {
       key: 'loginAt',
       label: 'Login Time',
-      render: (value) => new Date(value as string).toLocaleString(),
+      render: (value): React.ReactNode => new Date(value as string).toLocaleString(),
     },
     {
       key: 'logoutAt',
       label: 'Duration',
-      render: (value, row) => {
+      render: (value, row): React.ReactNode => {
         if (!value) return '—';
         const duration = new Date(value as string).getTime() - new Date(row.loginAt).getTime();
         return `${Math.round(duration / 60000)}m`;

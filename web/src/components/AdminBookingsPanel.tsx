@@ -7,7 +7,6 @@ import { adminApi } from '@/lib/api';
 import DataTable, { Column } from '@/components/DataTable';
 import FilterPanel, { FilterField } from '@/components/FilterPanel';
 import Pagination from '@/components/Pagination';
-import Modal from '@/components/Modal';
 import { AdminBooking, BookingFilter, PaginationState } from '@/types/admin';
 
 const STATUS_OPTIONS = [
@@ -28,8 +27,6 @@ export default function AdminBookingsPanel() {
     totalPages: 0,
   });
   const [filters, setFilters] = useState<BookingFilter>({});
-  const [selectedBooking, setSelectedBooking] = useState<AdminBooking | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Load bookings
   const loadBookings = async (page: number = 1, currentFilters?: BookingFilter) => {
@@ -56,10 +53,10 @@ export default function AdminBookingsPanel() {
   }, []);
 
   const handleFilter = (newFilters: Record<string, unknown>) => {
-    const typedFilters: BookingFilter = {
-      status: newFilters.status as string,
-      serviceId: newFilters.serviceId as string,
-      searchTerm: newFilters.searchTerm as string,
+    const typedFilters: any = {
+      status: (newFilters.status as string) || undefined,
+      serviceId: (newFilters.serviceId as string) || undefined,
+      searchTerm: (newFilters.searchTerm as string) || undefined,
     };
     setFilters(typedFilters);
     loadBookings(1, typedFilters);
@@ -108,7 +105,7 @@ export default function AdminBookingsPanel() {
       sortable: true,
       render: (value, row) => (
         <div>
-          <p style={{ fontWeight: 600, color: '#F5ECD7' }}>{value}</p>
+          <p style={{ fontWeight: 600, color: '#F5ECD7' }}>{String(value)}</p>
           <p className="text-xs" style={{ color: '#704214' }}>
             {row.userEmail}
           </p>
@@ -123,7 +120,7 @@ export default function AdminBookingsPanel() {
     {
       key: 'scheduledAt',
       label: 'Date & Time',
-      render: (value) => (
+      render: (value): React.ReactNode => (
         <div>
           <p>{new Date(value as string).toLocaleDateString()}</p>
           <p className="text-xs" style={{ color: '#704214' }}>
@@ -136,7 +133,7 @@ export default function AdminBookingsPanel() {
       key: 'status',
       label: 'Status',
       width: '100px',
-      render: (value) => (
+      render: (value): React.ReactNode => (
         <span
           className="px-2 py-1 rounded text-xs font-semibold"
           style={{
@@ -158,7 +155,7 @@ export default function AdminBookingsPanel() {
                     : '#F44336',
           }}
         >
-          {value}
+          {String(value)}
         </span>
       ),
     },
@@ -167,7 +164,7 @@ export default function AdminBookingsPanel() {
       label: 'Duration',
       width: '80px',
       align: 'center',
-      render: (value) => `${value}m`,
+      render: (value): React.ReactNode => `${value}m`,
     },
   ];
 

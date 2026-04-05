@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import AdminCoursesPanel from '@/components/AdminCoursesPanel';
 import AdminEventsPanel from '@/components/AdminEventsPanel';
-import AdminAnalyticsPanel from '@/components/AdminAnalyticsPanel';
 import AdminUsersPanel from '@/components/AdminUsersPanel';
 import AdminBookingsPanel from '@/components/AdminBookingsPanel';
 import AdminStorePanel from '@/components/AdminStorePanel';
