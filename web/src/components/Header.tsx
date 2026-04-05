@@ -138,19 +138,38 @@ export default function Header() {
 
             {/* Auth */}
             {user ? (
-              <button
-                onClick={() => { logout(); window.location.href = '/'; }}
-                style={{
-                  fontFamily: '"DM Sans", sans-serif',
-                  fontSize: '12px',
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: '#8B5E3C',
-                }}
-                className="hidden sm:block hover:opacity-70 transition-opacity"
-              >
-                Sign Out
-              </button>
+              <>
+                {user.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    style={{
+                      fontFamily: '"DM Sans", sans-serif',
+                      fontSize: '12px',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      color: '#C9A84C',
+                      textDecoration: 'none',
+                      cursor: 'pointer',
+                    }}
+                    className="hidden sm:block hover:opacity-80 transition-opacity"
+                  >
+                    ⚙️ Admin
+                  </Link>
+                )}
+                <button
+                  onClick={() => { logout(); window.location.href = '/'; }}
+                  style={{
+                    fontFamily: '"DM Sans", sans-serif',
+                    fontSize: '12px',
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: '#8B5E3C',
+                  }}
+                  className="hidden sm:block hover:opacity-70 transition-opacity"
+                >
+                  Sign Out
+                </button>
+              </>
             ) : (
               <Link
                 to="/login"

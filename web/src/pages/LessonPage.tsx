@@ -2,14 +2,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../stores/auth';
+import AudioPlayer from '../components/AudioPlayer';
 
 interface Lesson {
   id: string;
   title: string;
   description: string | null;
-  contentType: 'video' | 'text' | 'quiz';
+  contentType: 'video' | 'text' | 'quiz' | 'audio';
   videoUrl: string | null;
   textContent: string | null;
+  audioUrl?: string | null;
+  audioTranscript?: string | null;
   durationMinutes: number | null;
   sortOrder: number;
   isFree: boolean;
@@ -274,6 +277,43 @@ export default function LessonPage() {
                   style={{ fontFamily: '"Libre Baskerville", serif', color: '#E8DCBE', lineHeight: 1.85 }}
                   dangerouslySetInnerHTML={{ __html: currentLesson.textContent }}
                 />
+              )}
+
+              {/* Audio content */}
+              {currentLesson.contentType === 'audio' && currentLesson.audioUrl && (
+                <div className="mb-8">
+                  <AudioPlayer
+                    audioUrl={currentLesson.audioUrl}
+                    title={currentLesson.title}
+                    onTimeUpdate={() => {
+                      // Could save progress here
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Audio transcript */}
+              {currentLesson.contentType === 'audio' && currentLesson.audioTranscript && (
+                <div
+                  className="mt-8 p-6 rounded"
+                  style={{
+                    backgroundColor: '#2C1810',
+                    border: '1px solid #3D2B1F',
+                  }}
+                >
+                  <h3
+                    className="text-base font-bold mb-4"
+                    style={{ fontFamily: '"Playfair Display", serif', color: '#C9A84C' }}
+                  >
+                    📝 Transcript
+                  </h3>
+                  <div
+                    className="text-sm leading-relaxed"
+                    style={{ fontFamily: '"Libre Baskerville", serif', color: '#E8DCBE', lineHeight: 1.7 }}
+                  >
+                    {currentLesson.audioTranscript}
+                  </div>
+                </div>
               )}
             </motion.div>
 

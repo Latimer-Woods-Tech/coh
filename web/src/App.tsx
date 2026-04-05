@@ -7,6 +7,7 @@ import AcademyPage from './pages/AcademyPage';
 import CoursePage from './pages/CoursePage';
 import LessonPage from './pages/LessonPage';
 import AdminCoursePage from './pages/AdminCoursePage';
+import AdminPage from './pages/AdminPage';
 import EventsPage from './pages/EventsPage';
 import LoginPage from './pages/LoginPage';
 
@@ -21,6 +22,7 @@ export default function App() {
         <Route element={<Layout><CoursePage /></Layout>} path="/academy/:slug" />
         <Route element={<LessonPage />} path="/academy/:courseSlug/:lessonId" />
         <Route element={<Layout><AdminCoursePage /></Layout>} path="/admin/courses" />
+        <Route element={<AdminPage />} path="/admin" />
         <Route element={<Layout><EventsPage /></Layout>} path="/events" />
         <Route element={<LoginPage />} path="/login" />
         <Route path="*" element={<Navigate to="/" replace />} />
