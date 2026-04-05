@@ -43,13 +43,52 @@ adminSeed.post('/seed', authMiddleware, async (c) => {
 
     // ─── SEED USERS ───
     const adminHash = await hashPassword('password123');
-    const [adminUser] = await db
+    
+    // 3 Test Admin Users (Full Access)
+    const [admin1] = await db
       .insert(users)
       .values({
-        email: 'admin@coh.local',
+        email: 'admin1@coh.local',
         passwordHash: adminHash,
-        name: 'Cipher Admin',
+        name: 'Test Admin 1',
         role: 'admin',
+        membershipTier: 'free',
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    const [admin2] = await db
+      .insert(users)
+      .values({
+        email: 'admin2@coh.local',
+        passwordHash: adminHash,
+        name: 'Test Admin 2',
+        role: 'admin',
+        membershipTier: 'free',
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    const [admin3] = await db
+      .insert(users)
+      .values({
+        email: 'admin3@coh.local',
+        passwordHash: adminHash,
+        name: 'Test Admin 3',
+        role: 'admin',
+        membershipTier: 'free',
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    // Additional test users for other roles
+    const [practitionerUser] = await db
+      .insert(users)
+      .values({
+        email: 'practitioner@coh.local',
+        passwordHash: adminHash,
+        name: 'Healing Practitioner',
+        role: 'practitioner',
         membershipTier: 'free',
       })
       .onConflictDoNothing()
@@ -67,7 +106,15 @@ adminSeed.post('/seed', authMiddleware, async (c) => {
       .onConflictDoNothing()
       .returning();
 
-    results.users = { admin: adminUser?.email, client: clientUser?.email };
+    results.users = { 
+      admins: [
+        { email: admin1?.email, password: 'password123' },
+        { email: admin2?.email, password: 'password123' },
+        { email: admin3?.email, password: 'password123' }
+      ],
+      practitioner: practitionerUser?.email,
+      client: clientUser?.email
+    };
 
     // ─── SEED SERVICES ───
     const serviceData = [
