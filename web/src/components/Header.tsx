@@ -157,8 +157,23 @@ export default function Header() {
                     ⚙️ Admin
                   </Link>
                 )}
+                <Link
+                  to="/profile"
+                  style={{
+                    fontFamily: '"DM Sans", sans-serif',
+                    fontSize: '12px',
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: location.pathname === '/profile' ? '#C9A84C' : '#E8DCBE',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
+                  className="hidden sm:block hover:opacity-80 transition-opacity"
+                >
+                  My Cipher
+                </Link>
                 <button
-                  onClick={() => { logout(); window.location.href = '/'; }}
+                  onClick={() => { void logout().then(() => { window.location.href = '/'; }); }}
                   style={{
                     fontFamily: '"DM Sans", sans-serif',
                     fontSize: '12px',
@@ -172,13 +187,28 @@ export default function Header() {
                 </button>
               </>
             ) : (
-              <Link
-                to="/login"
-                className="hidden sm:block btn-primary btn"
-                style={{ padding: '0.5rem 1.25rem', fontSize: '12px' }}
-              >
-                Begin Your Session
-              </Link>
+              <div className="hidden sm:flex items-center gap-3">
+                <Link
+                  to="/login"
+                  style={{
+                    fontFamily: '"DM Sans", sans-serif',
+                    fontSize: '12px',
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: '#E8DCBE',
+                  }}
+                  className="hover:opacity-70 transition-opacity"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/signup"
+                  className="btn-primary btn"
+                  style={{ padding: '0.5rem 1.25rem', fontSize: '12px' }}
+                >
+                  Begin Your Session
+                </Link>
+              </div>
             )}
 
             {/* Mobile hamburger */}
@@ -227,15 +257,64 @@ export default function Header() {
                     {label}
                   </Link>
                 ))}
-                {!user && (
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="mt-3 btn btn-primary text-center"
-                    style={{ fontSize: '12px' }}
-                  >
-                    Begin Your Session
-                  </Link>
+                {user ? (
+                  <>
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="mt-2 py-3 px-2"
+                      style={{
+                        fontFamily: '"DM Sans", sans-serif',
+                        fontSize: '13px',
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: '#C9A84C',
+                        borderBottom: '1px solid rgba(201,168,76,0.1)',
+                        display: 'block',
+                      }}
+                    >
+                      My Cipher
+                    </Link>
+                    <button
+                      onClick={() => { setIsMenuOpen(false); void logout().then(() => { window.location.href = '/'; }); }}
+                      className="mt-1 py-3 px-2 text-left w-full"
+                      style={{
+                        fontFamily: '"DM Sans", sans-serif',
+                        fontSize: '13px',
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: '#8B5E3C',
+                      }}
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="mt-3 py-3 px-2 text-center block"
+                      style={{
+                        fontFamily: '"DM Sans", sans-serif',
+                        fontSize: '13px',
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: '#E8DCBE',
+                        borderBottom: '1px solid rgba(201,168,76,0.1)',
+                      }}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/signup"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="mt-2 btn btn-primary text-center"
+                      style={{ fontSize: '12px' }}
+                    >
+                      Begin Your Session
+                    </Link>
+                  </>
                 )}
               </div>
             </motion.nav>

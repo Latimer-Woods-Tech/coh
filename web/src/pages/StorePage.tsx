@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { TrackedLink as Link } from '@/components/TrackedLink';
 import { useCartStore } from '@/stores/cart';
 import { storeApi } from '@/lib/api';
@@ -38,6 +39,8 @@ export default function StorePage() {
   
   const [filter, setFilter] = useState('all');
   const addItem = useCartStore((state) => state.addItem);
+  const [searchParams] = useSearchParams();
+  const checkoutStatus = searchParams.get('checkout') as 'success' | 'cancelled' | null;
 
   // Load products and categories on mount
   useEffect(() => {
@@ -83,6 +86,27 @@ export default function StorePage() {
 
   return (
     <div style={{ backgroundColor: '#F5ECD7', minHeight: '100vh' }}>
+
+      {/* Stripe redirect banners */}
+      {checkoutStatus === 'success' && (
+        <div
+          className="px-6 py-4 text-sm font-medium text-center"
+          style={{ backgroundColor: '#2d6a4f', color: '#d8f3dc', fontFamily: '"DM Sans", sans-serif' }}
+        >
+          ✓ Order confirmed. Check your email for a receipt. &nbsp;
+          <a href="/profile" style={{ textDecoration: 'underline', color: '#b7e4c7' }}>
+            View in My Cipher →
+          </a>
+        </div>
+      )}
+      {checkoutStatus === 'cancelled' && (
+        <div
+          className="px-6 py-4 text-sm font-medium text-center"
+          style={{ backgroundColor: '#3d1f1f', color: '#fca5a5', fontFamily: '"DM Sans", sans-serif' }}
+        >
+          Payment was not completed. Your cart items are still available.
+        </div>
+      )}
 
       {/* Hero */}
       <section

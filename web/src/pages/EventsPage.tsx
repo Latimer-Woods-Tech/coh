@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { eventsApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 import { trackEvent } from '@/lib/analytics';
@@ -47,6 +47,8 @@ export default function EventsPage() {
 
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const checkoutStatus = searchParams.get('checkout') as 'success' | 'cancelled' | null;
 
   // Load events on mount
   useEffect(() => {
@@ -137,6 +139,27 @@ export default function EventsPage() {
 
   return (
     <div style={{ backgroundColor: '#F5ECD7', minHeight: '100vh' }}>
+
+      {/* Stripe redirect banners */}
+      {checkoutStatus === 'success' && (
+        <div
+          className="px-6 py-4 text-sm font-medium text-center"
+          style={{ backgroundColor: '#2d6a4f', color: '#d8f3dc', fontFamily: '"DM Sans", sans-serif' }}
+        >
+          ✓ You're registered. Check your email for details. &nbsp;
+          <a href="/profile" style={{ textDecoration: 'underline', color: '#b7e4c7' }}>
+            View in My Cipher →
+          </a>
+        </div>
+      )}
+      {checkoutStatus === 'cancelled' && (
+        <div
+          className="px-6 py-4 text-sm font-medium text-center"
+          style={{ backgroundColor: '#3d1f1f', color: '#fca5a5', fontFamily: '"DM Sans", sans-serif' }}
+        >
+          Registration was not completed. Select an event below to try again.
+        </div>
+      )}
 
       {/* Hero */}
       <section

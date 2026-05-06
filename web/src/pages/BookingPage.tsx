@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { bookingApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 
@@ -40,6 +40,8 @@ export default function BookingPage() {
 
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const checkoutStatus = searchParams.get('checkout') as 'success' | 'cancelled' | null;
 
   // Load services on mount
   useEffect(() => {
@@ -141,6 +143,27 @@ export default function BookingPage() {
 
   return (
     <div style={{ backgroundColor: '#F5ECD7', minHeight: '100vh' }}>
+
+      {/* Stripe redirect banners */}
+      {checkoutStatus === 'success' && (
+        <div
+          className="px-6 py-4 text-sm font-medium text-center"
+          style={{ backgroundColor: '#2d6a4f', color: '#d8f3dc', fontFamily: '"DM Sans", sans-serif' }}
+        >
+          ✓ Your session is booked. You'll receive a confirmation shortly. &nbsp;
+          <a href="/profile" style={{ textDecoration: 'underline', color: '#b7e4c7' }}>
+            View in My Cipher →
+          </a>
+        </div>
+      )}
+      {checkoutStatus === 'cancelled' && (
+        <div
+          className="px-6 py-4 text-sm font-medium text-center"
+          style={{ backgroundColor: '#3d1f1f', color: '#fca5a5', fontFamily: '"DM Sans", sans-serif' }}
+        >
+          Payment was not completed. Your slot has been released — select a new time below.
+        </div>
+      )}
 
       {/* Hero */}
       <section

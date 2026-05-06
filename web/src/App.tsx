@@ -17,6 +17,8 @@ const EventsPage = lazy(() => import('./pages/EventsPage'));
 const FounderPage = lazy(() => import('./pages/FounderPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const ShowPage = lazy(() => import('./pages/ShowPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
 
 function RouteFallback() {
   return (
@@ -52,6 +54,8 @@ export default function App() {
           <Route element={<Layout><DisclaimerPage /></Layout>} path="/disclaimer" />
           <Route element={<Layout><EventsPage /></Layout>} path="/events" />
           <Route element={<LoginPage />} path="/login" />
+          <Route element={<SignupPage />} path="/signup" />
+          <Route element={<Layout><ProfilePage /></Layout>} path="/profile" />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

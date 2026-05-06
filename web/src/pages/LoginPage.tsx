@@ -180,14 +180,21 @@ export default function LoginPage() {
 
           <div className="mt-8 pt-6 text-center" style={{ borderTop: '1px solid rgba(201,168,76,0.15)' }}>
             <p style={{ fontFamily: '"DM Sans", sans-serif', color: '#704214', fontSize: '13px' }}>
-              New to CypherOfHealing?{' '}
+              No account yet?{' '}
+              <Link
+                to="/signup"
+                style={{ color: '#C9A84C', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+              >
+                Create one
+              </Link>
+              {' '}· or{' '}
               <Link
                 to="/booking"
                 style={{ color: '#C9A84C', textDecoration: 'none' }}
                 onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.textDecoration = 'underline')}
                 onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.textDecoration = 'none')}
               >
-                Book your first session
+                book your first session
               </Link>
             </p>
           </div>
