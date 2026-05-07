@@ -26,7 +26,7 @@ app.use('*', prettyJSON());
 app.use('*', responseMiddleware());
 app.use('*', async (c, next) => {
   const corsMiddleware = cors({
-    origin: c.env.CORS_ORIGIN || '*',
+    origin: c.env.CORS_ORIGIN,
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
     exposeHeaders: ['X-Request-Id', 'X-API-Version', 'X-RateLimit-Limit', 'X-RateLimit-Remaining'],

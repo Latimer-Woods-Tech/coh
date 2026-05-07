@@ -14,16 +14,15 @@ import {
   courses, courseModules, lessons, events
 } from '../db/schema';
 import { hashPassword } from '../utils/auth';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware, adminOnly } from '../middleware/auth';
 import type { Env, Variables } from '../types/env';
 
 const adminSeed = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ─── POST: Seed Database ───
-adminSeed.post('/seed', authMiddleware, async (c) => {
-  const userRole = c.get('userRole');
-  if (userRole !== 'admin') {
-    return c.json({ error: 'Only admins can seed the database' }, 403);
+adminSeed.post('/seed', authMiddleware, adminOnly, async (c) => {
+  if (c.env.ENVIRONMENT === 'production') {
+    return c.json({ error: 'Seed endpoint disabled in production' }, 403);
   }
 
   const db = createDb(c.env.HYPERDRIVE);
@@ -42,8 +41,10 @@ adminSeed.post('/seed', authMiddleware, async (c) => {
     }
 
     // ─── SEED USERS ───
-    const adminHash = await hashPassword('password123');
-    
+    // Generates a one-time random password per seed run — logged to stdout only.
+    const seedPassword = crypto.randomUUID();
+    const adminHash = await hashPassword(seedPassword);
+
     // 3 Test Admin Users (Full Access)
     const [admin1] = await db
       .insert(users)
@@ -106,14 +107,13 @@ adminSeed.post('/seed', authMiddleware, async (c) => {
       .onConflictDoNothing()
       .returning();
 
-    results.users = { 
-      admins: [
-        { email: admin1?.email, password: 'password123' },
-        { email: admin2?.email, password: 'password123' },
-        { email: admin3?.email, password: 'password123' }
-      ],
+    // Log the seed password to stdout only — never return in response body.
+    console.log('[seed] one-time password for test accounts:', seedPassword);
+
+    results.users = {
+      admins: [admin1?.email, admin2?.email, admin3?.email].filter(Boolean),
       practitioner: practitionerUser?.email,
-      client: clientUser?.email
+      client: clientUser?.email,
     };
 
     // ─── SEED SERVICES ───
@@ -396,11 +396,7 @@ Duration: 12-18 hours (self-paced)`,
       success: true,
       message: 'Database seeded successfully!',
       results,
-      testCredentials: {
-        note: 'Test with these credentials',
-        admin: { email: 'admin@coh.local', password: 'password123' },
-        user: { email: 'user@coh.local', password: 'password123' },
-      },
+      note: 'Seed password logged to worker stdout — check wrangler tail for the one-time password.',
     });
   } catch (error) {
     console.error('Seed error:', error);
@@ -415,11 +411,7 @@ Duration: 12-18 hours (self-paced)`,
 });
 
 // ─── GET: Seed Status ───
-adminSeed.get('/seed/status', authMiddleware, async (c) => {
-  const userRole = c.get('userRole');
-  if (userRole !== 'admin') {
-    return c.json({ error: 'Only admins can check seed status' }, 403);
-  }
+adminSeed.get('/seed/status', authMiddleware, adminOnly, async (c) => {
 
   const db = createDb(c.env.HYPERDRIVE);
 

@@ -44,7 +44,7 @@ const API = import.meta.env.VITE_API_URL ?? 'https://cypher-of-healing-api.worke
 export default function CoursePage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { token } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [courseFetchFailed, setCourseFetchFailed] = useState(false);
@@ -55,9 +55,7 @@ export default function CoursePage() {
   const fetchCourse = useCallback(async () => {
     if (!slug) return;
     try {
-      const headers: Record<string, string> = {};
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(`${API}/api/academy/courses/${slug}`, { headers });
+      const res = await fetch(`${API}/api/academy/courses/${slug}`, { credentials: 'include' });
       if (!res.ok) throw new Error();
       const data = await res.json();
       setCourse(data.course);
@@ -71,7 +69,7 @@ export default function CoursePage() {
     } finally {
       setLoading(false);
     }
-  }, [slug, token]);
+  }, [slug]);
 
   useEffect(() => {
     fetchCourse();
@@ -84,7 +82,7 @@ export default function CoursePage() {
       offerName: tier.name,
     });
 
-    if (!token) {
+    if (!user) {
       navigate('/login');
       return;
     }
@@ -100,7 +98,7 @@ export default function CoursePage() {
     try {
       const res = await fetch(`${API}/api/academy/courses/${course.slug}/enroll`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.checkoutUrl && data.checkoutUrl !== 'TODO_STRIPE_CHECKOUT_URL') {

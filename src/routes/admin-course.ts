@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, desc, asc, count, sql } from 'drizzle-orm';
+import { and, eq, desc, asc, count, sql } from 'drizzle-orm';
 import { createDb } from '../db';
 import {
   courses,
@@ -431,7 +431,7 @@ admin.get('/enrollments', async (c) => {
     .from(enrollments)
     .innerJoin(courses, eq(courses.id, enrollments.courseId))
     .innerJoin(users, eq(users.id, enrollments.userId))
-    .where(conditions.length > 0 ? sql`${conditions.join(' AND ')}` : sql`TRUE`)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(enrollments.enrolledAt))
     .limit(limit)
     .offset(offset);

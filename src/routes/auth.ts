@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { setCookie, deleteCookie } from 'hono/cookie';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
@@ -8,6 +9,19 @@ import { createToken, verifyToken, hashPassword, verifyPassword } from '../utils
 import { authMiddleware } from '../middleware/auth';
 import { createRateLimitMiddleware } from '../middleware/rate-limit';
 import type { Env, Variables } from '../types/env';
+
+const TOKEN_MAX_AGE = 86400; // 24 hours
+
+function setAuthCookie(c: Parameters<typeof setCookie>[0], token: string) {
+  const isProduction = (c.env as Env).ENVIRONMENT === 'production';
+  setCookie(c, 'authToken', token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'Strict',
+    maxAge: TOKEN_MAX_AGE,
+    path: '/',
+  });
+}
 
 const auth = new Hono<{ Bindings: Env; Variables: Variables }>();
 const authWriteRateLimit = createRateLimitMiddleware({
@@ -69,6 +83,8 @@ auth.post('/signup', authWriteRateLimit, zValidator('json', signupSchema), async
       c.env.JWT_SECRET
     );
 
+    setAuthCookie(c, token);
+
     return c.json(
       {
         user: {
@@ -125,6 +141,8 @@ auth.post('/login', authWriteRateLimit, zValidator('json', loginSchema), async (
       c.env.JWT_SECRET
     );
 
+    setAuthCookie(c, token);
+
     return c.json(
       {
         user: {
@@ -166,6 +184,8 @@ auth.post('/refresh-token', authWriteRateLimit, zValidator('json', refreshSchema
       },
       c.env.JWT_SECRET
     );
+
+    setAuthCookie(c, newToken);
 
     return c.json({ token: newToken }, 200);
   } catch (error) {
@@ -238,10 +258,9 @@ auth.put('/me', authMiddleware, zValidator('json', updateProfileSchema), async (
   }
 });
 
-// ─── POST: Logout (just a confirmation endpoint) ───
-auth.post('/logout', authMiddleware, async (c) => {
-  // JWT is stateless, so logout is client-side (clear token)
-  // This endpoint exists for consistency and potential future use (blacklist tokens)
+// ─── POST: Logout ───
+auth.post('/logout', async (c) => {
+  deleteCookie(c, 'authToken', { path: '/' });
   return c.json({ message: 'Logged out' }, 200);
 });
 

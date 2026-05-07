@@ -47,7 +47,7 @@ type TabId = 'overview' | 'courses' | 'students' | 'create';
 
 export default function AdminCoursePage() {
   const navigate = useNavigate();
-  const { token, user } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
@@ -69,14 +69,13 @@ export default function AdminCoursePage() {
   const [createSuccess, setCreateSuccess] = useState('');
 
   const fetchData = useCallback(async () => {
-    if (!token || user?.role !== 'admin') return;
+    if (!user || user.role !== 'admin') return;
     setLoading(true);
-    const authHeader = { Authorization: `Bearer ${token}` };
     try {
       const [analyticsRes, coursesRes, enrollmentsRes] = await Promise.all([
-        fetch(`${API}/api/admin/analytics`, { headers: authHeader }),
-        fetch(`${API}/api/admin/courses`, { headers: authHeader }),
-        fetch(`${API}/api/admin/enrollments?limit=50`, { headers: authHeader }),
+        fetch(`${API}/api/admin/analytics`, { credentials: 'include' }),
+        fetch(`${API}/api/admin/courses`, { credentials: 'include' }),
+        fetch(`${API}/api/admin/enrollments?limit=50`, { credentials: 'include' }),
       ]);
 
       if (analyticsRes.ok) setAnalytics(await analyticsRes.json());
@@ -85,20 +84,21 @@ export default function AdminCoursePage() {
     } finally {
       setLoading(false);
     }
-  }, [token, user]);
+  }, [user]);
 
   useEffect(() => {
-    if (!token) { navigate('/login'); return; }
-    if (user && user.role !== 'admin') { navigate('/'); return; }
+    if (!user) { navigate('/login'); return; }
+    if (user.role !== 'admin') { navigate('/'); return; }
     fetchData();
-  }, [token, user, navigate, fetchData]);
+  }, [user, navigate, fetchData]);
 
   const togglePublish = async (course: CourseRow) => {
     setActionLoading(course.id);
     try {
       await fetch(`${API}/api/admin/courses/${course.id}/publish`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ publish: !course.isPublished }),
       });
       setCourses((prev) =>
@@ -123,7 +123,8 @@ export default function AdminCoursePage() {
     try {
       const res = await fetch(`${API}/api/admin/courses`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCourse),
       });
       if (!res.ok) {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import DOMPurify from 'dompurify';
 import { useAuthStore } from '../stores/auth';
 import AudioPlayer from '../components/AudioPlayer';
 
@@ -39,7 +40,7 @@ const API = import.meta.env.VITE_API_URL ?? 'https://cypher-of-healing-api.worke
 export default function LessonPage() {
   const { courseSlug, lessonId } = useParams<{ courseSlug: string; lessonId: string }>();
   const navigate = useNavigate();
-  const { token } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
@@ -48,10 +49,10 @@ export default function LessonPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchCourse = useCallback(async () => {
-    if (!courseSlug || !token) return;
+    if (!courseSlug || !user) return;
     try {
       const res = await fetch(`${API}/api/academy/courses/${courseSlug}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to load course');
       const data = await res.json();
@@ -66,15 +67,15 @@ export default function LessonPage() {
     } catch (err) {
       setError('Unable to load course content. Please try again.');
     }
-  }, [courseSlug, lessonId, token]);
+  }, [courseSlug, lessonId, user]);
 
   useEffect(() => {
-    if (!token) {
+    if (!user) {
       navigate('/login');
       return;
     }
     fetchCourse();
-  }, [fetchCourse, token, navigate]);
+  }, [fetchCourse, user, navigate]);
 
   // Update current lesson when URL lessonId changes
   useEffect(() => {
@@ -90,7 +91,7 @@ export default function LessonPage() {
     try {
       await fetch(`${API}/api/academy/lessons/${currentLesson.id}/complete`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       setCurrentLesson((prev) => (prev ? { ...prev, completed: true } : prev));
 
@@ -275,7 +276,7 @@ export default function LessonPage() {
                 <div
                   className="prose-lg max-w-none leading-relaxed"
                   style={{ fontFamily: '"Libre Baskerville", serif', color: '#E8DCBE', lineHeight: 1.85 }}
-                  dangerouslySetInnerHTML={{ __html: currentLesson.textContent }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentLesson.textContent) }}
                 />
               )}
 

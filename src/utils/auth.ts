@@ -6,7 +6,7 @@ import type { JWTPayload } from 'jose';
  * Uses jose library for secure JWT operations
  */
 
-const getDangerousSecret = (secret: string): Uint8Array => {
+const getJwtSigningKey = (secret: string): Uint8Array => {
   if (secret.length < 32) {
     throw new Error('JWT_SECRET must be at least 32 characters');
   }
@@ -85,7 +85,7 @@ export async function createToken(
   secret: string,
   expiresIn: string | number | Date = '24h'
 ): Promise<string> {
-  const encoder = getDangerousSecret(secret);
+  const encoder = getJwtSigningKey(secret);
   const token = await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(String(payload.userId))
@@ -102,7 +102,7 @@ export async function verifyToken(
   token: string,
   secret: string
 ): Promise<TokenPayload> {
-  const encoder = getDangerousSecret(secret);
+  const encoder = getJwtSigningKey(secret);
   const verified = await jwtVerify(token, encoder);
   return verified.payload as TokenPayload;
 }

@@ -11,7 +11,6 @@ export interface User {
 }
 
 interface AuthResponse {
-  token: string;
   user: User;
 }
 
@@ -21,7 +20,6 @@ interface ProfileResponse {
 
 interface AuthStore {
   user: User | null;
-  token: string | null;
   isLoading: boolean;
   error: string | null;
   signup: (email: string, password: string, name: string) => Promise<void>;
@@ -30,86 +28,81 @@ interface AuthStore {
   refreshProfile: () => Promise<void>;
   updateProfile: (data: { name?: string; phone?: string; avatar?: string }) => Promise<void>;
   setUser: (user: User | null) => void;
-  setToken: (token: string | null) => void;
 }
 
-export const useAuthStore = create<AuthStore>((set) => {
-  // Load from localStorage on init
-  const savedToken = localStorage.getItem('authToken');
+export const useAuthStore = create<AuthStore>(() => {
+  // User profile is non-sensitive — safe to cache in localStorage for UI continuity.
+  // Auth state is managed by the HttpOnly authToken cookie (set by the server).
   const savedUser = localStorage.getItem('user');
 
   return {
-    user: savedUser ? JSON.parse(savedUser) : null,
-    token: savedToken,
+    user: savedUser ? (JSON.parse(savedUser) as User) : null,
     isLoading: false,
     error: null,
 
     signup: async (email: string, password: string, name: string) => {
-      set({ isLoading: true, error: null });
+      useAuthStore.setState({ isLoading: true, error: null });
       try {
         const response = await authApi.signup({ email, password, name }) as unknown as AuthResponse;
-        const { token, user } = response;
-        localStorage.setItem('authToken', token);
+        const { user } = response;
         localStorage.setItem('user', JSON.stringify(user));
-        set({ token, user, isLoading: false });
-      } catch (error: any) {
-        const errorMessage = error?.message || 'Signup failed';
-        set({ isLoading: false, error: errorMessage });
+        useAuthStore.setState({ user, isLoading: false });
+      } catch (error: unknown) {
+        const errorMessage = (error as { message?: string })?.message || 'Signup failed';
+        useAuthStore.setState({ isLoading: false, error: errorMessage });
         throw error;
       }
     },
 
     login: async (email: string, password: string) => {
-      set({ isLoading: true, error: null });
+      useAuthStore.setState({ isLoading: true, error: null });
       try {
         const response = await authApi.login({ email, password }) as unknown as AuthResponse;
-        const { token, user } = response;
-        localStorage.setItem('authToken', token);
+        const { user } = response;
         localStorage.setItem('user', JSON.stringify(user));
-        set({ token, user, isLoading: false });
-      } catch (error: any) {
-        const errorMessage = error?.message || 'Login failed';
-        set({ isLoading: false, error: errorMessage });
+        useAuthStore.setState({ user, isLoading: false });
+      } catch (error: unknown) {
+        const errorMessage = (error as { message?: string })?.message || 'Login failed';
+        useAuthStore.setState({ isLoading: false, error: errorMessage });
         throw error;
       }
     },
 
     logout: async () => {
-      set({ isLoading: true });
+      useAuthStore.setState({ isLoading: true });
       try {
         await authApi.logout();
-      } catch (error) {
+      } catch {
         // Continue logout even if API call fails
       }
-      localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      set({ user: null, token: null, isLoading: false });
+      useAuthStore.setState({ user: null, isLoading: false });
     },
 
     refreshProfile: async () => {
-      set({ isLoading: true, error: null });
+      useAuthStore.setState({ isLoading: true, error: null });
       try {
         const response = await authApi.getProfile() as unknown as ProfileResponse;
-        const user = response.user;
+        const { user } = response;
         localStorage.setItem('user', JSON.stringify(user));
-        set({ user, isLoading: false });
-      } catch (error: any) {
-        const errorMessage = error?.message || 'Failed to refresh profile';
-        set({ isLoading: false, error: errorMessage });
+        useAuthStore.setState({ user, isLoading: false });
+      } catch (error: unknown) {
+        const errorMessage = (error as { message?: string })?.message || 'Failed to refresh profile';
+        useAuthStore.setState({ isLoading: false, error: errorMessage });
         throw error;
       }
     },
 
     updateProfile: async (data: { name?: string; phone?: string; avatar?: string }) => {
-      set({ isLoading: true, error: null });
+      useAuthStore.setState({ isLoading: true, error: null });
       try {
         const response = await authApi.updateProfile(data) as unknown as ProfileResponse;
-        const user = response.user;
+        const { user } = response;
         localStorage.setItem('user', JSON.stringify(user));
-        set({ user, isLoading: false });
-      } catch (error: any) {
-        const errorMessage = error?.message || 'Failed to update profile';
-        set({ isLoading: false, error: errorMessage });
+        useAuthStore.setState({ user, isLoading: false });
+      } catch (error: unknown) {
+        const errorMessage = (error as { message?: string })?.message || 'Failed to update profile';
+        useAuthStore.setState({ isLoading: false, error: errorMessage });
         throw error;
       }
     },
@@ -120,16 +113,7 @@ export const useAuthStore = create<AuthStore>((set) => {
       } else {
         localStorage.removeItem('user');
       }
-      set({ user });
-    },
-
-    setToken: (token: string | null) => {
-      if (token) {
-        localStorage.setItem('authToken', token);
-      } else {
-        localStorage.removeItem('authToken');
-      }
-      set({ token });
+      useAuthStore.setState({ user });
     },
   };
 });
