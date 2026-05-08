@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { eq, and, desc, gte } from 'drizzle-orm';
+import { eq, and, desc, gte, count } from 'drizzle-orm';
 import Stripe from 'stripe';
 import { createDb } from '../db';
 import { events, eventRegistrations, activityLog, users } from '../db/schema';
@@ -29,17 +29,24 @@ function serializeIntakeResponsesForMetadata(intakeResponses: unknown) {
 eventsRouter.get('/', async (c) => {
   const db = createDb(c.env.HYPERDRIVE);
   const type = c.req.query('type'); // webinar, workshop, consultation
+  const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
+  const offset = (page - 1) * limit;
 
+  const conditions = and(
+    eq(events.status, 'scheduled'),
+    gte(events.scheduledAt, new Date()),
+    type ? eq(events.type, type as any) : undefined,
+  );
+
+  const [{ total }] = await db.select({ total: count() }).from(events).where(conditions);
   const upcoming = await db.select().from(events)
-    .where(and(
-      eq(events.status, 'scheduled'),
-      gte(events.scheduledAt, new Date()),
-      type ? eq(events.type, type as any) : undefined,
-    ))
+    .where(conditions)
     .orderBy(events.scheduledAt)
-    .limit(20);
+    .limit(limit)
+    .offset(offset);
 
-  return c.json({ events: upcoming });
+  return c.json({ data: upcoming, total: Number(total), page, limit, pages: Math.ceil(Number(total) / limit) });
 });
 
 // ─── Public: Get event detail ───

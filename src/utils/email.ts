@@ -2,6 +2,7 @@
  * Email utilities using Resend API
  * https://resend.com - Transactional email service
  */
+import { logger } from './logger';
 
 interface EmailTemplate {
   subject: string;
@@ -19,12 +20,84 @@ interface EmailParams {
 /**
  * Send email via Resend API
  */
+export function passwordResetEmail(params: {
+  userName: string;
+  resetUrl: string;
+}): EmailTemplate {
+  return {
+    subject: 'Reset your CypherOfHealing password',
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #2C1810; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #2C1810; color: #F5ECD7; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #E8DCBE; padding: 30px; }
+    .footer { background: #2C1810; color: #C9A84C; padding: 20px; text-align: center; font-size: 12px; }
+    .button { background: #C9A84C; color: #2C1810; padding: 12px 24px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>Password Reset</h1></div>
+    <div class="content">
+      <p>Hi ${params.userName},</p>
+      <p>We received a request to reset your password. Click below to choose a new one. This link expires in 1 hour.</p>
+      <a href="${params.resetUrl}" class="button">Reset Password</a>
+      <p style="margin-top:24px; font-size:12px; color:#704214;">If you didn't request this, you can safely ignore this email.</p>
+    </div>
+    <div class="footer"><p>CypherOfHealing.com | The outer is a reflection of the inner</p></div>
+  </div>
+</body>
+</html>`,
+    text: `Reset your password: ${params.resetUrl}\n\nThis link expires in 1 hour.`,
+  };
+}
+
+export function magicLinkEmail(params: {
+  userName: string;
+  loginUrl: string;
+}): EmailTemplate {
+  return {
+    subject: 'Your CypherOfHealing sign-in link',
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #2C1810; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #2C1810; color: #F5ECD7; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #E8DCBE; padding: 30px; }
+    .footer { background: #2C1810; color: #C9A84C; padding: 20px; text-align: center; font-size: 12px; }
+    .button { background: #C9A84C; color: #2C1810; padding: 14px 28px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>Sign in to your account</h1></div>
+    <div class="content">
+      <p>Hi ${params.userName},</p>
+      <p>Click below to sign in. This link expires in 15 minutes and works only once.</p>
+      <a href="${params.loginUrl}" class="button">Sign in</a>
+      <p style="margin-top:24px; font-size:12px; color:#704214;">If you didn't request this, you can safely ignore this email.</p>
+    </div>
+    <div class="footer"><p>CypherOfHealing.com</p></div>
+  </div>
+</body>
+</html>`,
+    text: `Sign in: ${params.loginUrl}\n\nThis link expires in 15 minutes and works only once.`,
+  };
+}
+
 export async function sendEmail(
   apiKey: string,
   params: EmailParams
 ): Promise<{ id: string; from?: string } | null> {
   if (!apiKey) {
-    console.error('RESEND_API_KEY not configured');
+    logger.error('RESEND_API_KEY not configured');
     return null;
   }
 
@@ -46,13 +119,13 @@ export async function sendEmail(
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Resend API error:', error);
+      logger.error('Resend API error', { to: params.to, status: response.status }, error);
       return null;
     }
 
     return response.json();
   } catch (error) {
-    console.error('Failed to send email:', error);
+    logger.error('Failed to send email', { to: params.to }, error);
     return null;
   }
 }

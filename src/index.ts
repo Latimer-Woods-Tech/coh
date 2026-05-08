@@ -6,13 +6,20 @@ import { nanoid } from 'nanoid';
 import type { Env, Variables } from './types/env';
 import { responseMiddleware, errorResponse } from './middleware/response';
 import { createErrorHandler, ErrorCodes } from './middleware/errors';
+import { sendAppointmentReminders } from './utils/reminders';
 
+import seo from './routes/seo';
 import auth from './routes/auth';
+import subscriptions from './routes/subscriptions';
+import show from './routes/show';
 import booking from './routes/booking';
 import store from './routes/store';
 import academy from './routes/academy';
 import events from './routes/events';
 import adminCourse from './routes/admin-course';
+import adminBooking from './routes/admin-booking';
+import adminStore from './routes/admin-store';
+import adminEventsUsers from './routes/admin-events';
 import adminSeed from './routes/admin-seed';
 import comms from './routes/communications';
 import adminAudio from './routes/admin-audio';
@@ -112,15 +119,23 @@ app.get('/api/docs', (c) => {
   });
 });
 
+// ─── SEO routes (no auth required) ───
+app.route('/', seo);
+
 // ─── API Routes ───
 // ─── Route Mounting ───
 app.route('/api/auth', auth);
+app.route('/api/subscriptions', subscriptions);
+app.route('/api/show', show);
 app.route('/api/booking', booking);
 app.route('/api/store', store);
 app.route('/api/academy', academy);
 app.route('/api/events', events);
 app.route('/api/webhooks', webhooks);
 app.route('/api/admin', adminCourse);
+app.route('/api/admin', adminEventsUsers);
+app.route('/api/admin/booking', adminBooking);
+app.route('/api/admin/store', adminStore);
 app.route('/api/admin/seed', adminSeed);
 app.route('/api/comms', comms);
 app.route('/api/admin/audio', adminAudio);
@@ -137,4 +152,9 @@ app.notFound((c) => {
 // ─── Error handler ───
 app.onError((err, c) => createErrorHandler(c.env.ENVIRONMENT === 'development')(err, c));
 
-export default app;
+export default {
+  fetch: app.fetch.bind(app),
+  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(sendAppointmentReminders(env));
+  },
+};

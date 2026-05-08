@@ -5,27 +5,29 @@
   "compatibility_date": "2026-03-27",
   "compatibility_flags": ["nodejs_compat"],
 
-  // TODO: Hyperdrive — create with:
-  // npx wrangler hyperdrive create cypher-healing-db --connection-string="postgres://USER:PASS@HOST:5432/neondb"
-  // Then add the ID below:
-  // "hyperdrive": [
-  //   {
-  //     "binding": "HYPERDRIVE",
-  //     "id": "YOUR_HYPERDRIVE_ID"
-  //   }
-  // ],
+  // Custom domain — never expose .workers.dev to end users
+  "routes": [
+    { "pattern": "api.cypherofhealing.com", "custom_domain": true }
+  ],
 
-  // TODO: KV for session tokens and cache
-  // Create KV namespace: npx wrangler kv:namespace create "SESSIONS"
-  // Then add below:
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "SESSIONS",
-  //     "id": "YOUR_KV_ID"
-  //   }
-  // ],
+  // Neon Postgres via Hyperdrive
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "e0fa92f0bf824ec7baac3726199b06b1"
+    }
+  ],
 
-  // R2 for product images, course media, profile photos
+  // KV for session tokens, rate-limit counters, magic-link + password-reset
+  // tokens, and Stripe webhook idempotency keys.
+  "kv_namespaces": [
+    {
+      "binding": "SESSIONS",
+      "id": "c5edb2b016984eb5ba0a6ac01b03ffa6"
+    }
+  ],
+
+  // R2 for product images, course media, profile photos, audio narration
   "r2_buckets": [
     {
       "binding": "MEDIA",
@@ -33,16 +35,22 @@
     }
   ],
 
-  // Environment variables (secrets set via `wrangler secret put`)
+  // Cron: hourly SMS reminder sweep — picks up confirmed appointments in
+  // the next 24h that don't have reminderSentAt set
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
+
+  // Non-secret env vars
   "vars": {
-    "ENVIRONMENT": "development",
+    "ENVIRONMENT": "production",
     "CORS_ORIGIN": "https://cypherofhealing.com",
     "APP_NAME": "CypherOfHealing"
   }
 
-  // Secrets to configure:
-  // wrangler secret put STRIPE_SECRET_KEY
-  // wrangler secret put STRIPE_WEBHOOK_SECRET
-  // wrangler secret put JWT_SECRET
-  // wrangler secret put RESEND_API_KEY
+  // Secrets (set via `wrangler secret put`):
+  //   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, JWT_SECRET, RESEND_API_KEY,
+  //   TELNYX_API_KEY, TELNYX_PHONE_NUMBER, TELNYX_CONNECTION_ID, TELNYX_PUBLIC_KEY,
+  //   ELEVENLABS_API_KEY, ELEVEN_LABS_VOICE_ID, CLOUDFLARE_API, CLOUDFLARE_ACCOUNT_ID,
+  //   SENTRY_DSN
 }

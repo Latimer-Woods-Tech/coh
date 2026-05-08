@@ -444,6 +444,51 @@ export const emailCampaigns = pgTable('email_campaigns', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ============================================================
+// THE STAGE: Show / Podcast Episodes
+// ============================================================
+
+export const episodeStatusEnum = pgEnum('episode_status', ['draft', 'published', 'archived']);
+
+export const episodes = pgTable('episodes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: varchar('title', { length: 255 }).notNull(),
+  slug: varchar('slug', { length: 255 }).notNull().unique(),
+  description: text('description'),
+  episodeNumber: integer('episode_number').notNull(),
+  season: integer('season').default(1),
+
+  // Cloudflare Stream
+  streamVideoUid: varchar('stream_video_uid', { length: 255 }),  // Stream video UID
+  thumbnailUrl: text('thumbnail_url'),
+  durationSeconds: integer('duration_seconds'),
+
+  // Audio-only fallback (R2)
+  audioUrl: text('audio_url'),
+
+  // Show notes (markdown)
+  showNotes: text('show_notes'),
+  guestName: varchar('guest_name', { length: 255 }),
+  guestBio: text('guest_bio'),
+
+  // Gating: free for all, or only for VIP/Inner Circle members
+  membershipGated: boolean('membership_gated').default(false),
+
+  status: episodeStatusEnum('status').default('draft').notNull(),
+  publishedAt: timestamp('published_at'),
+
+  // Engagement
+  viewCount: integer('view_count').default(0),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('episodes_slug_idx').on(table.slug),
+  index('episodes_status_idx').on(table.status),
+  index('episodes_published_idx').on(table.publishedAt),
+  uniqueIndex('episodes_number_uniq').on(table.season, table.episodeNumber),
+]);
+
 // Coupons — work across store, courses, and events
 export const coupons = pgTable('coupons', {
   id: uuid('id').primaryKey().defaultRandom(),
