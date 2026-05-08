@@ -1,7 +1,8 @@
 # CypherOfHealing.com — Standing Orders
 
 > Canonical reference for all agents, engineers, and AI tools working in this repository.
-> Read `README.md` for the full product vision and `docs/` for engineering detail.
+> Read `README.md` for the full product vision, `docs/ROADMAP.md` for the engineering plan, and `docs/` for domain detail.
+> Agent coordination contract: `.github/AGENT_PROTOCOL.md`
 
 ## Mission
 
