@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { eq, and, gte, lte, desc, inArray, lt, gt, sql } from 'drizzle-orm';
+import { eq, and, gte, lte, desc, inArray, lt, gt, sql, count } from 'drizzle-orm';
 import Stripe from 'stripe';
 import { createDb } from '../db';
 import { services, appointments, availabilitySlots, activityLog, users } from '../db/schema';
@@ -20,10 +20,18 @@ const bookingWriteRateLimit = createRateLimitMiddleware({
 // ─── Public: List services ───
 booking.get('/services', async (c) => {
   const db = createDb(c.env.HYPERDRIVE);
-  const allServices = await db.select().from(services)
+  const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
+  const offset = (page - 1) * limit;
+
+  const [{ total }] = await db.select({ total: count() }).from(services).where(eq(services.isActive, true));
+  const data = await db.select().from(services)
     .where(eq(services.isActive, true))
-    .orderBy(services.sortOrder);
-  return c.json({ services: allServices });
+    .orderBy(services.sortOrder)
+    .limit(limit)
+    .offset(offset);
+
+  return c.json({ data, total: Number(total), page, limit, pages: Math.ceil(Number(total) / limit) });
 });
 
 // ─── Public: Get availability for a date ───
@@ -222,13 +230,18 @@ booking.post('/appointments', bookingWriteRateLimit, authMiddleware, zValidator(
 booking.get('/appointments', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
   const db = createDb(c.env.HYPERDRIVE);
+  const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
+  const offset = (page - 1) * limit;
 
-  const myAppointments = await db.select().from(appointments)
+  const [{ total }] = await db.select({ total: count() }).from(appointments).where(eq(appointments.userId, userId));
+  const data = await db.select().from(appointments)
     .where(eq(appointments.userId, userId))
     .orderBy(desc(appointments.scheduledAt))
-    .limit(20);
+    .limit(limit)
+    .offset(offset);
 
-  return c.json({ appointments: myAppointments });
+  return c.json({ data, total: Number(total), page, limit, pages: Math.ceil(Number(total) / limit) });
 });
 
 // ─── Auth: Cancel appointment ───

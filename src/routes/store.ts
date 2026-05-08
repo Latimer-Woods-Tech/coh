@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, count } from 'drizzle-orm';
 import Stripe from 'stripe';
 import { createDb } from '../db';
 import { products, productCategories, orders, orderItems, activityLog, users } from '../db/schema';
@@ -15,14 +15,22 @@ const store = new Hono<{ Bindings: Env; Variables: Variables }>();
 store.get('/products', async (c) => {
   const db = createDb(c.env.HYPERDRIVE);
   const category = c.req.query('category');
+  const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
+  const offset = (page - 1) * limit;
 
-  const query = db.select().from(products).where(eq(products.isActive, true)).orderBy(products.sortOrder);
-  const allProducts = await query;
+  const conditions = category
+    ? and(eq(products.isActive, true), eq(products.categoryId, category))
+    : eq(products.isActive, true);
 
-  return c.json({ products: category
-    ? allProducts.filter(p => p.categoryId === category)
-    : allProducts
-  });
+  const [{ total }] = await db.select({ total: count() }).from(products).where(conditions);
+  const data = await db.select().from(products)
+    .where(conditions)
+    .orderBy(products.sortOrder)
+    .limit(limit)
+    .offset(offset);
+
+  return c.json({ data, total: Number(total), page, limit, pages: Math.ceil(Number(total) / limit) });
 });
 
 // ─── Public: Get single product ───
@@ -224,13 +232,18 @@ store.post('/orders', authMiddleware, zValidator('json', z.object({
 store.get('/orders', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
   const db = createDb(c.env.HYPERDRIVE);
+  const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
+  const offset = (page - 1) * limit;
 
-  const myOrders = await db.select().from(orders)
+  const [{ total }] = await db.select({ total: count() }).from(orders).where(eq(orders.userId, userId));
+  const data = await db.select().from(orders)
     .where(eq(orders.userId, userId))
     .orderBy(desc(orders.createdAt))
-    .limit(20);
+    .limit(limit)
+    .offset(offset);
 
-  return c.json({ orders: myOrders });
+  return c.json({ data, total: Number(total), page, limit, pages: Math.ceil(Number(total) / limit) });
 });
 
 export default store;
