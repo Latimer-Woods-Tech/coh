@@ -56,7 +56,10 @@ adminDb.post('/migrate', async (c) => {
   }
 
   try {
-    const result = await runMigrations(c.env.HYPERDRIVE);
+    // Prefer direct DATABASE_URL for migrations (bypasses Hyperdrive proxy);
+    // fall back to Hyperdrive binding if DATABASE_URL isn't set.
+    const connection = c.env.DATABASE_URL ?? c.env.HYPERDRIVE;
+    const result = await runMigrations(connection);
     return c.json({ ok: true, bootstrapped: userCount === 0, ...result });
   } catch (error) {
     // ErrorEvent from neon-serverless wraps the underlying error in different ways depending on cause

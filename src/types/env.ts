@@ -37,6 +37,11 @@ export type Env = {
   // Observability
   SENTRY_DSN?: string;
 
+  // Direct Neon connection — used by the migration runner (bypasses Hyperdrive
+  // which is for runtime read pooling). Optional; if absent the runner falls
+  // back to the Hyperdrive binding.
+  DATABASE_URL?: string;
+
   // Vars
   ENVIRONMENT: string;
   CORS_ORIGIN: string;

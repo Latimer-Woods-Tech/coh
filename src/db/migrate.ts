@@ -12,9 +12,13 @@ const ALL_MIGRATIONS: Array<{ name: string; sql: string }> = [
  * coh_migrations(name TEXT PRIMARY KEY, applied_at TIMESTAMP DEFAULT NOW()).
  * Splits each file on `--> statement-breakpoint` (Drizzle's separator) and
  * runs each statement individually so partial failures don't leave half-state.
+ *
+ * Accepts either a direct postgres URL (preferred for migrations — bypasses
+ * Hyperdrive's WebSocket proxy quirks) or a Hyperdrive binding.
  */
-export async function runMigrations(hyperdrive: Hyperdrive): Promise<{ applied: string[]; skipped: string[] }> {
-  const pool = new Pool({ connectionString: hyperdrive.connectionString });
+export async function runMigrations(connection: string | Hyperdrive): Promise<{ applied: string[]; skipped: string[] }> {
+  const connectionString = typeof connection === 'string' ? connection : connection.connectionString;
+  const pool = new Pool({ connectionString });
   const applied: string[] = [];
   const skipped: string[] = [];
 
