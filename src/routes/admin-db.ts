@@ -115,6 +115,110 @@ adminDb.post('/reset', async (c) => {
   }
 });
 
+/**
+ * Bootstrap Stripe products + prices for VIP and Inner Circle on whatever
+ * Stripe account `STRIPE_SECRET_KEY` belongs to, then patch `membership_plans`
+ * rows so the seeded data references the live IDs.
+ *
+ * Idempotent: looks up by name first; only creates if missing. Same
+ * users-empty guard as /migrate so it can't be called after launch.
+ *
+ * POST /__db/stripe-bootstrap
+ */
+adminDb.post('/stripe-bootstrap', async (c) => {
+  const connection = c.env.DATABASE_URL ?? c.env.HYPERDRIVE.connectionString;
+  const pool = new Pool({ connectionString: connection });
+
+  try {
+    // Lock guard — refuse after first user
+    try {
+      const { rows } = await pool.query<{ count: string }>('SELECT COUNT(*)::text AS count FROM users');
+      if ((rows[0]?.count ?? '0') !== '0') {
+        return c.json({ error: 'Refusing to re-bootstrap — users already exist' }, 403);
+      }
+    } catch {}
+
+    const Stripe = (await import('stripe')).default;
+    const stripe = new Stripe(c.env.STRIPE_SECRET_KEY);
+
+    const tiers = [
+      {
+        tier: 'vip' as const,
+        name: 'CypherOfHealing VIP',
+        description: 'Early access to The Chair, member-only episodes, 10% off The Vault, monthly community circle.',
+        monthlyAmount: 1900,
+        annualAmount: 19000,
+      },
+      {
+        tier: 'inner_circle' as const,
+        name: 'CypherOfHealing Inner Circle',
+        description: 'Everything in VIP plus quarterly 1:1 with the founder, full Academy access, Stage replays, private text channel.',
+        monthlyAmount: 4900,
+        annualAmount: 49000,
+      },
+    ];
+
+    const results: Array<{ tier: string; productId: string; monthlyPriceId: string; annualPriceId: string }> = [];
+
+    for (const t of tiers) {
+      // Find-or-create product (search by exact name)
+      const existing = await stripe.products.search({ query: `name:'${t.name}' AND active:'true'` });
+      const product = existing.data[0] ?? await stripe.products.create({
+        name: t.name,
+        description: t.description,
+      });
+
+      // Find-or-create monthly + annual prices
+      const prices = await stripe.prices.list({ product: product.id, active: true, limit: 100 });
+      let monthlyPrice = prices.data.find((p) => p.recurring?.interval === 'month' && p.unit_amount === t.monthlyAmount);
+      let annualPrice = prices.data.find((p) => p.recurring?.interval === 'year' && p.unit_amount === t.annualAmount);
+
+      if (!monthlyPrice) {
+        monthlyPrice = await stripe.prices.create({
+          product: product.id,
+          unit_amount: t.monthlyAmount,
+          currency: 'usd',
+          recurring: { interval: 'month' },
+        });
+      }
+      if (!annualPrice) {
+        annualPrice = await stripe.prices.create({
+          product: product.id,
+          unit_amount: t.annualAmount,
+          currency: 'usd',
+          recurring: { interval: 'year' },
+        });
+      }
+
+      // Update membership_plans row
+      await pool.query(
+        `UPDATE membership_plans
+         SET stripe_product_id = $1,
+             stripe_price_id_monthly = $2,
+             stripe_price_id_annual = $3
+         WHERE tier = $4`,
+        [product.id, monthlyPrice.id, annualPrice.id, t.tier],
+      );
+
+      results.push({
+        tier: t.tier,
+        productId: product.id,
+        monthlyPriceId: monthlyPrice.id,
+        annualPriceId: annualPrice.id,
+      });
+    }
+
+    return c.json({ ok: true, bootstrapped: results });
+  } catch (error) {
+    return c.json({
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+    }, 500);
+  } finally {
+    await pool.end();
+  }
+});
+
 // Diagnostic — confirms the worker is running my latest code + that
 // Hyperdrive connection string is reachable. Open route, no secrets in
 // the response body.
