@@ -13,7 +13,8 @@ type RateLimitState = {
 };
 
 function getClientIp(c: Context<{ Bindings: Env; Variables: Variables }>) {
-  return c.req.header('CF-Connecting-IP') || c.req.header('x-forwarded-for') || 'unknown';
+  const clientId = c.req.header('cf-connecting-ip') ?? c.req.header('x-forwarded-for') ?? 'unknown';
+  return clientId;
 }
 
 export function createRateLimitMiddleware(options: RateLimitOptions) {

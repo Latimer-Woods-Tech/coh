@@ -7,6 +7,7 @@ import type { Env, Variables } from './types/env';
 import { responseMiddleware, errorResponse } from './middleware/response';
 import { createErrorHandler, ErrorCodes } from './middleware/errors';
 
+import seo from './routes/seo';
 import auth from './routes/auth';
 import booking from './routes/booking';
 import store from './routes/store';
@@ -111,6 +112,9 @@ app.get('/api/docs', (c) => {
     },
   });
 });
+
+// ─── SEO routes (no auth required) ───
+app.route('/', seo);
 
 // ─── API Routes ───
 // ─── Route Mounting ───
