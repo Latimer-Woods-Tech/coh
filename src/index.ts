@@ -133,14 +133,18 @@ app.route('/api/store', store);
 app.route('/api/academy', academy);
 app.route('/api/events', events);
 app.route('/api/webhooks', webhooks);
-app.route('/api/admin', adminCourse);
-app.route('/api/admin', adminEventsUsers);
+// More-specific admin sub-paths must be mounted BEFORE the catch-all
+// `app.route('/api/admin', adminCourse)` so Hono's path matcher routes
+// `/api/admin/db/*`, `/api/admin/booking/*`, etc. to the right sub-app
+// instead of falling into adminCourse's `admin.use('*', authMiddleware)`.
+app.route('/api/admin/db', adminDb);
 app.route('/api/admin/booking', adminBooking);
 app.route('/api/admin/store', adminStore);
 app.route('/api/admin/seed', adminSeed);
-app.route('/api/admin/db', adminDb);
-app.route('/api/comms', comms);
 app.route('/api/admin/audio', adminAudio);
+app.route('/api/admin', adminCourse);
+app.route('/api/admin', adminEventsUsers);
+app.route('/api/comms', comms);
 
 // ─── 404 handler ───
 app.notFound((c) => {
