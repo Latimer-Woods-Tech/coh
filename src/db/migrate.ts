@@ -44,10 +44,25 @@ export async function runMigrations(connection: string | Hyperdrive): Promise<{ 
       const statements = m.sql
         .split('--> statement-breakpoint')
         .map((s) => s.trim())
-        .filter((s) => s.length > 0);
+        .filter((s) => s.length > 0)
+        // Idempotent re-runs: tolerate pre-existing schema by patching
+        // the CREATE statements that Drizzle generates without IF NOT EXISTS.
+        .map((s) => s
+          .replace(/^CREATE TABLE "/i, 'CREATE TABLE IF NOT EXISTS "')
+          .replace(/^CREATE TYPE "/i, 'CREATE TYPE IF NOT EXISTS "')
+          .replace(/^CREATE (UNIQUE )?INDEX "/i, 'CREATE $1INDEX IF NOT EXISTS "'));
 
       for (const stmt of statements) {
-        await pool.query(stmt);
+        try {
+          await pool.query(stmt);
+        } catch (error) {
+          // CREATE TYPE IF NOT EXISTS isn't supported on Postgres < 17 — swallow
+          // duplicate-object errors (42710 for types, 42P07 for tables, 42710 for
+          // ALTER TABLE ADD CONSTRAINT). Other errors propagate.
+          const code = (error as { code?: string })?.code;
+          if (code === '42710' || code === '42P07' || code === '42P16') continue;
+          throw error;
+        }
       }
 
       await pool.query(
