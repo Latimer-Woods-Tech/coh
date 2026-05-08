@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { eq, desc, and, count } from 'drizzle-orm';
 import Stripe from 'stripe';
 import { createDb } from '../db';
-import { products, productCategories, orders, orderItems, activityLog, users } from '../db/schema';
+import { products, productCategories, orders, orderItems, activityLog, users, coupons } from '../db/schema';
 import { authMiddleware } from '../middleware/auth';
 import { sendEmail, orderConfirmationEmail } from '../utils/email';
 import type { Env, Variables } from '../types/env';
@@ -48,6 +48,39 @@ store.get('/categories', async (c) => {
   const db = createDb(c.env.HYPERDRIVE);
   const categories = await db.select().from(productCategories).orderBy(productCategories.sortOrder);
   return c.json({ categories });
+});
+
+// ─── Public: Validate coupon ───
+store.post('/validate-coupon', zValidator('json', z.object({
+  code: z.string().min(1).max(50),
+  stream: z.enum(['store', 'courses', 'events', 'all']).optional(),
+})), async (c) => {
+  const { code, stream } = c.req.valid('json');
+  const db = createDb(c.env.HYPERDRIVE);
+
+  const [coupon] = await db.select().from(coupons)
+    .where(and(eq(coupons.code, code.toUpperCase()), eq(coupons.isActive, true)))
+    .limit(1);
+
+  if (!coupon) return c.json({ valid: false, error: 'Coupon not found' }, 404);
+  if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
+    return c.json({ valid: false, error: 'Coupon has expired' }, 410);
+  }
+  if (coupon.maxUses && Number(coupon.currentUses) >= coupon.maxUses) {
+    return c.json({ valid: false, error: 'Coupon has reached its usage limit' }, 410);
+  }
+  if (stream && coupon.appliesToStream !== 'all' && coupon.appliesToStream !== stream) {
+    return c.json({ valid: false, error: `Coupon is not valid for ${stream}` }, 422);
+  }
+
+  return c.json({
+    valid: true,
+    code: coupon.code,
+    discountType: coupon.discountType,
+    discountValue: coupon.discountValue,
+    minPurchase: coupon.minPurchase,
+    description: coupon.description,
+  });
 });
 
 // ─── Auth: Create order (checkout) ───
@@ -94,7 +127,31 @@ store.post('/orders', authMiddleware, zValidator('json', z.object({
     const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
     const orderNumber = `COH-${datePart}-${randomPart}`;
 
-    // TODO: Apply coupon discount
+    // Apply coupon discount
+    let discountAmount = 0;
+    if (couponCode) {
+      const [coupon] = await db.select().from(coupons)
+        .where(and(eq(coupons.code, couponCode.toUpperCase()), eq(coupons.isActive, true)))
+        .limit(1);
+
+      if (coupon &&
+        !(coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) &&
+        !(coupon.maxUses && Number(coupon.currentUses) >= coupon.maxUses) &&
+        (coupon.appliesToStream === 'all' || coupon.appliesToStream === 'store') &&
+        !(coupon.minPurchase && subtotal < Number(coupon.minPurchase))
+      ) {
+        discountAmount = coupon.discountType === 'percentage'
+          ? subtotal * (Number(coupon.discountValue) / 100)
+          : Math.min(Number(coupon.discountValue), subtotal);
+        discountAmount = Math.round(discountAmount * 100) / 100;
+
+        await db.update(coupons)
+          .set({ currentUses: (Number(coupon.currentUses) + 1) })
+          .where(eq(coupons.id, coupon.id));
+      }
+    }
+
+    const total = Math.max(0, subtotal - discountAmount);
     // TODO: Calculate tax via Stripe Tax
     // TODO: Calculate shipping
 
@@ -120,9 +177,10 @@ store.post('/orders', authMiddleware, zValidator('json', z.object({
       userId,
       orderNumber,
       subtotal: String(subtotal),
-      total: String(subtotal),
+      discountAmount: String(discountAmount),
+      total: String(total),
       shippingAddress,
-      couponCode,
+      couponCode: couponCode ? couponCode.toUpperCase() : undefined,
       sourceAppointmentId,
       status: 'pending',
     }).returning();
