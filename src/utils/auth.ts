@@ -21,7 +21,9 @@ export interface TokenPayload extends JWTPayload {
   exp?: number;
 }
 
-const PBKDF2_ITERATIONS = 210_000;
+// Cloudflare Workers' Web Crypto caps PBKDF2 iterations at 100,000.
+// Higher values throw "Pbkdf2 failed: iteration counts above 100000 are not supported".
+const PBKDF2_ITERATIONS = 100_000;
 const PBKDF2_SALT_BYTES = 16;
 const PBKDF2_HASH_BYTES = 32;
 
