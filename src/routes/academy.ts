@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, count } from 'drizzle-orm';
 import Stripe from 'stripe';
 import { createDb } from '../db';
 import { courses, courseModules, lessons, enrollments, lessonProgress, activityLog, users } from '../db/schema';
@@ -11,10 +11,18 @@ const academy = new Hono<{ Bindings: Env; Variables: Variables }>();
 // ─── Public: List published courses ───
 academy.get('/courses', async (c) => {
   const db = createDb(c.env.HYPERDRIVE);
-  const allCourses = await db.select().from(courses)
+  const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
+  const offset = (page - 1) * limit;
+
+  const [{ total }] = await db.select({ total: count() }).from(courses).where(eq(courses.isPublished, true));
+  const data = await db.select().from(courses)
     .where(eq(courses.isPublished, true))
-    .orderBy(desc(courses.publishedAt));
-  return c.json({ courses: allCourses });
+    .orderBy(desc(courses.publishedAt))
+    .limit(limit)
+    .offset(offset);
+
+  return c.json({ data, total: Number(total), page, limit, pages: Math.ceil(Number(total) / limit) });
 });
 
 // ─── Public: Get course detail with modules (lessons gated) ───
@@ -175,12 +183,18 @@ academy.post('/lessons/:lessonId/complete', authMiddleware, async (c) => {
 academy.get('/enrollments', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
   const db = createDb(c.env.HYPERDRIVE);
+  const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
+  const offset = (page - 1) * limit;
 
-  const myEnrollments = await db.select().from(enrollments)
+  const [{ total }] = await db.select({ total: count() }).from(enrollments).where(eq(enrollments.userId, userId));
+  const data = await db.select().from(enrollments)
     .where(eq(enrollments.userId, userId))
-    .orderBy(desc(enrollments.enrolledAt));
+    .orderBy(desc(enrollments.enrolledAt))
+    .limit(limit)
+    .offset(offset);
 
-  return c.json({ enrollments: myEnrollments });
+  return c.json({ data, total: Number(total), page, limit, pages: Math.ceil(Number(total) / limit) });
 });
 
 export default academy;
