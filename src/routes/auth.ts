@@ -8,6 +8,7 @@ import { users } from '../db/schema';
 import { createToken, verifyToken, hashPassword, verifyPassword } from '../utils/auth';
 import { authMiddleware } from '../middleware/auth';
 import { createRateLimitMiddleware } from '../middleware/rate-limit';
+import { sendEmail, magicLinkEmail } from '../utils/email';
 import type { Env, Variables } from '../types/env';
 
 const TOKEN_MAX_AGE = 86400; // 24 hours
@@ -256,6 +257,83 @@ auth.put('/me', authMiddleware, zValidator('json', updateProfileSchema), async (
   } catch (error) {
     return c.json({ error: 'Failed to update profile' }, 500);
   }
+});
+
+// ─── POST: Magic Link Request ───
+auth.post('/magic-link/request', authWriteRateLimit, zValidator('json', z.object({
+  email: z.string().email(),
+})), async (c) => {
+  const { email } = c.req.valid('json');
+  const db = createDb(c.env.HYPERDRIVE);
+
+  let [user] = await db.select({ id: users.id, name: users.name, email: users.email })
+    .from(users).where(eq(users.email, email)).limit(1);
+
+  // Auto-provision a user record on first magic-link request (passwordless onboarding)
+  if (!user) {
+    const [created] = await db.insert(users).values({
+      email,
+      name: email.split('@')[0],
+      role: 'client',
+      membershipTier: 'free',
+    }).returning({ id: users.id, name: users.name, email: users.email });
+    user = created;
+  }
+
+  const token = crypto.randomUUID();
+  await c.env.SESSIONS.put(`magic-link:${token}`, user.id, { expirationTtl: 900 });
+
+  const appOrigin = c.env.CORS_ORIGIN || 'https://cypherofhealing.com';
+  const loginUrl = `${appOrigin}/auth/magic-link?token=${token}`;
+  const template = magicLinkEmail({ userName: user.name, loginUrl });
+
+  await sendEmail(c.env.RESEND_API_KEY, {
+    to: user.email,
+    subject: template.subject,
+    html: template.html,
+    text: template.text,
+  });
+
+  return c.json({ message: 'Check your email for a sign-in link.' }, 200);
+});
+
+// ─── POST: Magic Link Verify ───
+auth.post('/magic-link/verify', authWriteRateLimit, zValidator('json', z.object({
+  token: z.string().min(1),
+})), async (c) => {
+  const { token } = c.req.valid('json');
+
+  const userId = await c.env.SESSIONS.get(`magic-link:${token}`);
+  if (!userId) return c.json({ error: 'Link is invalid or has expired' }, 400);
+
+  // One-time use: delete immediately (before issuing JWT) to prevent replay
+  await c.env.SESSIONS.delete(`magic-link:${token}`);
+
+  const db = createDb(c.env.HYPERDRIVE);
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user) return c.json({ error: 'User not found' }, 404);
+
+  await db.update(users)
+    .set({ lastActiveAt: new Date(), emailVerifiedAt: user.emailVerifiedAt ?? new Date() })
+    .where(eq(users.id, user.id));
+
+  const jwt = await createToken(
+    { userId: user.id, email: user.email, role: user.role },
+    c.env.JWT_SECRET,
+  );
+
+  setAuthCookie(c, jwt);
+
+  return c.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      membershipTier: user.membershipTier,
+    },
+    token: jwt,
+  }, 200);
 });
 
 // ─── POST: Logout ───
