@@ -99,10 +99,7 @@ auth.post('/signup', authWriteRateLimit, zValidator('json', signupSchema), async
       201
     );
   } catch (error) {
-    return c.json({
-      error: 'Registration failed',
-      detail: error instanceof Error ? error.message : String(error),
-    }, 500);
+    return c.json({ error: 'Registration failed' }, 500);
   }
 });
 
