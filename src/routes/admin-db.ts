@@ -208,7 +208,44 @@ adminDb.post('/stripe-bootstrap', async (c) => {
       });
     }
 
-    return c.json({ ok: true, bootstrapped: results });
+    // Find-or-create webhook endpoint pointing at our /api/webhooks/stripe
+    const webhookUrl = 'https://api.cypherofhealing.com/api/webhooks/stripe';
+    const events: string[] = [
+      'checkout.session.completed',
+      'charge.refunded',
+      'payment_intent.payment_failed',
+      'customer.subscription.updated',
+      'customer.subscription.deleted',
+    ];
+
+    const allWebhooks = await stripe.webhookEndpoints.list({ limit: 100 });
+    const existingWebhook = allWebhooks.data.find((w) => w.url === webhookUrl);
+
+    let webhookSecret: string | null = null;
+    let webhookId: string;
+
+    if (existingWebhook) {
+      // Already exists — secret can't be retrieved after creation; report only
+      webhookId = existingWebhook.id;
+      // Make sure events list is current
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await stripe.webhookEndpoints.update(existingWebhook.id, { enabled_events: events as any });
+    } else {
+      const created = await stripe.webhookEndpoints.create({
+        url: webhookUrl,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        enabled_events: events as any,
+        description: 'CypherOfHealing API — production',
+      });
+      webhookId = created.id;
+      webhookSecret = created.secret ?? null;
+    }
+
+    return c.json({
+      ok: true,
+      bootstrapped: results,
+      webhook: { id: webhookId, secretReturned: !!webhookSecret, secret: webhookSecret },
+    });
   } catch (error) {
     return c.json({
       ok: false,
