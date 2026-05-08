@@ -358,6 +358,106 @@ webhooks.post('/stripe', async (c) => {
     }
   }
 
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object as Stripe.Charge;
+    const paymentIntentId = getStripePaymentIntentId(charge.payment_intent);
+
+    if (paymentIntentId) {
+      // Find the order by payment intent and mark as refunded
+      const [order] = await db
+        .select({ id: orders.id, userId: orders.userId })
+        .from(orders)
+        .where(eq(orders.stripePaymentIntentId, paymentIntentId))
+        .limit(1);
+
+      if (order) {
+        await db.update(orders)
+          .set({ status: 'refunded', updatedAt: new Date() })
+          .where(eq(orders.id, order.id));
+
+        await db.insert(activityLog).values({
+          userId: order.userId,
+          action: 'order.refunded',
+          resourceType: 'order',
+          resourceId: order.id,
+          metadata: {
+            stripeChargeId: charge.id,
+            stripePaymentIntentId: paymentIntentId,
+            amountRefunded: charge.amount_refunded ? (charge.amount_refunded / 100).toFixed(2) : null,
+          },
+        });
+      }
+
+      // Find the appointment by payment intent and mark as cancelled
+      const [appointment] = await db
+        .select({ id: appointments.id, userId: appointments.userId })
+        .from(appointments)
+        .where(eq(appointments.stripePaymentIntentId, paymentIntentId))
+        .limit(1);
+
+      if (appointment) {
+        await db.update(appointments)
+          .set({ status: 'cancelled', updatedAt: new Date() })
+          .where(eq(appointments.id, appointment.id));
+
+        await db.insert(activityLog).values({
+          userId: appointment.userId,
+          action: 'appointment.refunded',
+          resourceType: 'appointment',
+          resourceId: appointment.id,
+          metadata: { stripeChargeId: charge.id, stripePaymentIntentId: paymentIntentId },
+        });
+      }
+    }
+  }
+
+  if (event.type === 'payment_intent.payment_failed') {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    const failureMessage = paymentIntent.last_payment_error?.message ?? 'Payment failed';
+
+    // Cancel the associated pending appointment
+    const [appointment] = await db
+      .select({ id: appointments.id, userId: appointments.userId })
+      .from(appointments)
+      .where(eq(appointments.stripePaymentIntentId, paymentIntent.id))
+      .limit(1);
+
+    if (appointment) {
+      await db.update(appointments)
+        .set({ status: 'cancelled', updatedAt: new Date() })
+        .where(eq(appointments.id, appointment.id));
+
+      await db.insert(activityLog).values({
+        userId: appointment.userId,
+        action: 'appointment.payment_failed',
+        resourceType: 'appointment',
+        resourceId: appointment.id,
+        metadata: { stripePaymentIntentId: paymentIntent.id, failureMessage },
+      });
+    }
+
+    // Mark associated pending order as cancelled
+    const [order] = await db
+      .select({ id: orders.id, userId: orders.userId })
+      .from(orders)
+      .where(eq(orders.stripePaymentIntentId, paymentIntent.id))
+      .limit(1);
+
+    if (order) {
+      await db.update(orders)
+        .set({ status: 'cancelled', updatedAt: new Date() })
+        .where(eq(orders.id, order.id));
+
+      await db.insert(activityLog).values({
+        userId: order.userId,
+        action: 'order.payment_failed',
+        resourceType: 'order',
+        resourceId: order.id,
+        metadata: { stripePaymentIntentId: paymentIntent.id, failureMessage },
+      });
+    }
+  }
+
   await markStripeEventProcessed(c.env, event.id);
 
   return c.json({ received: true }, 200);
