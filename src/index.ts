@@ -155,7 +155,7 @@ app.notFound((c) => {
 app.onError((err, c) => createErrorHandler(c.env.ENVIRONMENT === 'development')(err, c));
 
 export default {
-  fetch: app.fetch.bind(app),
+  fetch: (request: Request, env: Env, ctx: ExecutionContext) => app.fetch(request, env, ctx),
   async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     ctx.waitUntil(sendAppointmentReminders(env));
   },
