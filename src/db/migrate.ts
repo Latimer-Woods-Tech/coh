@@ -45,11 +45,11 @@ export async function runMigrations(connection: string | Hyperdrive): Promise<{ 
         .split('--> statement-breakpoint')
         .map((s) => s.trim())
         .filter((s) => s.length > 0)
-        // Idempotent re-runs: tolerate pre-existing schema by patching
-        // the CREATE statements that Drizzle generates without IF NOT EXISTS.
+        // Idempotent re-runs: patch CREATE TABLE/INDEX to IF NOT EXISTS
+        // (Postgres < 17 has no CREATE TYPE IF NOT EXISTS — those are
+        // tolerated by the catch-block on 42710 below).
         .map((s) => s
           .replace(/^CREATE TABLE "/i, 'CREATE TABLE IF NOT EXISTS "')
-          .replace(/^CREATE TYPE "/i, 'CREATE TYPE IF NOT EXISTS "')
           .replace(/^CREATE (UNIQUE )?INDEX "/i, 'CREATE $1INDEX IF NOT EXISTS "'));
 
       for (const stmt of statements) {
