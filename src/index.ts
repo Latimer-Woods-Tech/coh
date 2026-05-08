@@ -11,6 +11,7 @@ import { sendAppointmentReminders } from './utils/reminders';
 import seo from './routes/seo';
 import auth from './routes/auth';
 import subscriptions from './routes/subscriptions';
+import show from './routes/show';
 import booking from './routes/booking';
 import store from './routes/store';
 import academy from './routes/academy';
@@ -125,6 +126,7 @@ app.route('/', seo);
 // ─── Route Mounting ───
 app.route('/api/auth', auth);
 app.route('/api/subscriptions', subscriptions);
+app.route('/api/show', show);
 app.route('/api/booking', booking);
 app.route('/api/store', store);
 app.route('/api/academy', academy);
