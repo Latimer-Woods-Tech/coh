@@ -55,8 +55,35 @@ adminDb.post('/migrate', async (c) => {
     }
   }
 
-  const result = await runMigrations(c.env.HYPERDRIVE);
-  return c.json({ ok: true, bootstrapped: userCount === 0, ...result });
+  try {
+    const result = await runMigrations(c.env.HYPERDRIVE);
+    return c.json({ ok: true, bootstrapped: userCount === 0, ...result });
+  } catch (error) {
+    return c.json({
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    }, 500);
+  }
+});
+
+// Diagnostic — confirms the worker is running my latest code + that
+// Hyperdrive connection string is reachable. Open route, no secrets in
+// the response body.
+adminDb.get('/ping', async (c) => {
+  const hasHyperdrive = !!c.env.HYPERDRIVE;
+  let hyperdriveConnString = false;
+  try {
+    hyperdriveConnString = !!c.env.HYPERDRIVE?.connectionString;
+  } catch {
+    hyperdriveConnString = false;
+  }
+  return c.json({
+    ok: true,
+    version: 'admin-db v3 (state-based bootstrap, error logging)',
+    hasHyperdrive,
+    hyperdriveConnString,
+  });
 });
 
 export default adminDb;
