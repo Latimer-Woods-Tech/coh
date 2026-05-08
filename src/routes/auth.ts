@@ -8,6 +8,7 @@ import { users } from '../db/schema';
 import { createToken, verifyToken, hashPassword, verifyPassword } from '../utils/auth';
 import { authMiddleware } from '../middleware/auth';
 import { createRateLimitMiddleware } from '../middleware/rate-limit';
+import { sendEmail, passwordResetEmail } from '../utils/email';
 import type { Env, Variables } from '../types/env';
 
 const TOKEN_MAX_AGE = 86400; // 24 hours
@@ -256,6 +257,61 @@ auth.put('/me', authMiddleware, zValidator('json', updateProfileSchema), async (
   } catch (error) {
     return c.json({ error: 'Failed to update profile' }, 500);
   }
+});
+
+// ─── POST: Forgot Password ───
+auth.post('/forgot-password', authWriteRateLimit, zValidator('json', z.object({
+  email: z.string().email(),
+})), async (c) => {
+  const { email } = c.req.valid('json');
+  const db = createDb(c.env.HYPERDRIVE);
+
+  // Always return 200 to prevent email enumeration
+  const [user] = await db.select({ id: users.id, name: users.name, email: users.email })
+    .from(users).where(eq(users.email, email)).limit(1);
+
+  if (user) {
+    const token = crypto.randomUUID();
+    await c.env.SESSIONS.put(`pw-reset:${token}`, user.id, { expirationTtl: 3600 });
+
+    const appOrigin = c.env.CORS_ORIGIN || 'https://cypherofhealing.com';
+    const resetUrl = `${appOrigin}/reset-password?token=${token}`;
+    const template = passwordResetEmail({ userName: user.name, resetUrl });
+
+    await sendEmail(c.env.RESEND_API_KEY, {
+      to: user.email,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+    });
+  }
+
+  return c.json({ message: 'If that email is registered, a reset link is on its way.' }, 200);
+});
+
+// ─── POST: Reset Password ───
+auth.post('/reset-password', authWriteRateLimit, zValidator('json', z.object({
+  token: z.string().min(1),
+  password: z.string().min(8),
+})), async (c) => {
+  const { token, password } = c.req.valid('json');
+
+  const userId = await c.env.SESSIONS.get(`pw-reset:${token}`);
+  if (!userId) return c.json({ error: 'Token is invalid or has expired' }, 400);
+
+  const passwordHash = await hashPassword(password);
+  const db = createDb(c.env.HYPERDRIVE);
+
+  const [updated] = await db.update(users)
+    .set({ passwordHash, updatedAt: new Date() })
+    .where(eq(users.id, userId))
+    .returning({ id: users.id });
+
+  if (!updated) return c.json({ error: 'User not found' }, 404);
+
+  await c.env.SESSIONS.delete(`pw-reset:${token}`);
+
+  return c.json({ message: 'Password updated. You can now log in.' }, 200);
 });
 
 // ─── POST: Logout ───
