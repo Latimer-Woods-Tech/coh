@@ -34,6 +34,9 @@ export type Env = {
   GROQ_API_KEY?: string;
   GROK_API_KEY?: string;
 
+  // Observability
+  SENTRY_DSN?: string;
+
   // Vars
   ENVIRONMENT: string;
   CORS_ORIGIN: string;

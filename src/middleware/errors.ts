@@ -1,5 +1,8 @@
 import { Context } from 'hono';
 import { errorResponse } from './response';
+import { logger } from '../utils/logger';
+import { captureException } from '../utils/sentry';
+import type { Env } from '../types/env';
 
 /**
  * Custom error class for API errors with consistent formatting
@@ -81,7 +84,20 @@ export const ApiErrors = {
  */
 export function createErrorHandler(isDev = false) {
   return (err: Error | ApiError, c: Context) => {
-    console.error('API Error:', err);
+    const requestId = c.req.header('X-Request-ID') ?? undefined;
+    const route = `${c.req.method} ${new URL(c.req.url).pathname}`;
+    logger.error('API Error', { requestId, route }, err);
+
+    // Send 5xx and unexpected errors to Sentry; skip 4xx (client mistakes)
+    const isExpected = err instanceof ApiError && err.status < 500;
+    if (!isExpected) {
+      const env = c.env as Env;
+      captureException(env?.SENTRY_DSN, err, {
+        environment: env?.ENVIRONMENT,
+        tags: { route, requestId: requestId ?? 'none' },
+        request: { url: c.req.url, method: c.req.method },
+      });
+    }
 
     if (err instanceof ApiError) {
       return errorResponse(c, {
