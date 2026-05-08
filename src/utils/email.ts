@@ -2,6 +2,7 @@
  * Email utilities using Resend API
  * https://resend.com - Transactional email service
  */
+import { logger } from './logger';
 
 interface EmailTemplate {
   subject: string;
@@ -24,7 +25,7 @@ export async function sendEmail(
   params: EmailParams
 ): Promise<{ id: string; from?: string } | null> {
   if (!apiKey) {
-    console.error('RESEND_API_KEY not configured');
+    logger.error('RESEND_API_KEY not configured');
     return null;
   }
 
@@ -46,13 +47,13 @@ export async function sendEmail(
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Resend API error:', error);
+      logger.error('Resend API error', { to: params.to, status: response.status }, error);
       return null;
     }
 
     return response.json();
   } catch (error) {
-    console.error('Failed to send email:', error);
+    logger.error('Failed to send email', { to: params.to }, error);
     return null;
   }
 }
