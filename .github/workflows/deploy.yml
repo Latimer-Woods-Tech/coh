@@ -25,6 +25,33 @@ jobs:
       - name: Install backend dependencies
         run: npm install
 
+      # Push secrets from the org vault into the worker — bulk upload before
+      # deploying so the new deployment boots with everything wired.
+      - name: Sync worker secrets from org vault
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: '.'
+          secrets: |
+            STRIPE_SECRET_KEY
+            RESEND_API_KEY
+            TELNYX_API_KEY
+            ELEVENLABS_API_KEY
+            ELEVEN_LABS_VOICE_ID
+            SENTRY_DSN
+            DATABASE_URL
+            CLOUDFLARE_API
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          TELNYX_API_KEY: ${{ secrets.TELNYX_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVEN_LABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_CYPHER }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_CYPHER_HEALING }}
+          DATABASE_URL: ${{ secrets.NEON_CONNECTION_STRING }}
+          CLOUDFLARE_API: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
       - name: Deploy backend to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
@@ -40,8 +67,8 @@ jobs:
         working-directory: ./web
         env:
           VITE_API_URL: https://api.cypherofhealing.com/api
-          VITE_STRIPE_PUBLIC_KEY: ${{ secrets.VITE_STRIPE_PUBLIC_KEY }}
-          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+          VITE_STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          VITE_POSTHOG_KEY: ${{ secrets.POSTHOG_PROJECT_TOKEN }}
         run: npm run build
 
       - name: Deploy frontend to Cloudflare Pages
@@ -70,4 +97,4 @@ jobs:
 
       - name: Deployment failure notification
         if: failure()
-        run: echo "❌ Deployment failed. Check the logs above."
+        run: echo "Deployment failed. Check the logs above."
