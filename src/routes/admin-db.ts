@@ -59,9 +59,20 @@ adminDb.post('/migrate', async (c) => {
     const result = await runMigrations(c.env.HYPERDRIVE);
     return c.json({ ok: true, bootstrapped: userCount === 0, ...result });
   } catch (error) {
+    // ErrorEvent from neon-serverless wraps the underlying error in different ways depending on cause
+    const e = error as Record<string, unknown>;
     return c.json({
       ok: false,
       error: error instanceof Error ? error.message : String(error),
+      errorType: error?.constructor?.name,
+      // ErrorEvent fields
+      message: typeof e?.message === 'string' ? e.message : undefined,
+      type: typeof e?.type === 'string' ? e.type : undefined,
+      reason: typeof e?.reason === 'string' ? e.reason : undefined,
+      // Standard PG error fields
+      code: typeof e?.code === 'string' ? e.code : undefined,
+      detail: typeof e?.detail === 'string' ? e.detail : undefined,
+      severity: typeof e?.severity === 'string' ? e.severity : undefined,
       stack: error instanceof Error ? error.stack : undefined,
     }, 500);
   }
