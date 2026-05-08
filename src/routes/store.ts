@@ -13,7 +13,7 @@ const store = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ─── Public: List products ───
 store.get('/products', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const category = c.req.query('category');
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
@@ -36,7 +36,7 @@ store.get('/products', async (c) => {
 // ─── Public: Get single product ───
 store.get('/products/:slug', async (c) => {
   const slug = c.req.param('slug');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [product] = await db.select().from(products).where(eq(products.slug, slug)).limit(1);
   if (!product) return c.json({ error: 'Product not found' }, 404);
@@ -45,7 +45,7 @@ store.get('/products/:slug', async (c) => {
 
 // ─── Public: List categories ───
 store.get('/categories', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const categories = await db.select().from(productCategories).orderBy(productCategories.sortOrder);
   return c.json({ categories });
 });
@@ -56,7 +56,7 @@ store.post('/validate-coupon', zValidator('json', z.object({
   stream: z.enum(['store', 'courses', 'events', 'all']).optional(),
 })), async (c) => {
   const { code, stream } = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [coupon] = await db.select().from(coupons)
     .where(and(eq(coupons.code, code.toUpperCase()), eq(coupons.isActive, true)))
@@ -98,7 +98,7 @@ store.post('/orders', authMiddleware, zValidator('json', z.object({
 })), async (c) => {
   const userId = c.get('userId')!;
   const { items, shippingAddress, couponCode, sourceAppointmentId } = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const stripe = new Stripe(c.env.STRIPE_SECRET_KEY);
 
   try {
@@ -289,7 +289,7 @@ store.post('/orders', authMiddleware, zValidator('json', z.object({
 // ─── Auth: Get my orders ───
 store.get('/orders', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
   const offset = (page - 1) * limit;

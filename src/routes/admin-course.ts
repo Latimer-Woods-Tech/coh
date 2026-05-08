@@ -25,7 +25,7 @@ admin.use('*', adminOnly);
 
 /** List all courses (draft + published) with enrollment counts */
 admin.get('/courses', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const rows = await db
     .select({
@@ -67,7 +67,7 @@ admin.post('/courses', async (c) => {
     return c.json({ error: 'title, slug, and price are required' }, 400);
   }
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [course] = await db
     .insert(courses)
@@ -97,7 +97,7 @@ admin.post('/courses', async (c) => {
 /** Get full course detail with modules + lessons */
 admin.get('/courses/:id', async (c) => {
   const id = c.req.param('id');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const course = await db.query.courses.findFirst({ where: eq(courses.id, id) });
   if (!course) return c.json({ error: 'Course not found' }, 404);
@@ -139,7 +139,7 @@ admin.put('/courses/:id', async (c) => {
     stripeProductId?: string;
   }>();
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db
     .update(courses)
@@ -164,7 +164,7 @@ admin.put('/courses/:id', async (c) => {
 admin.post('/courses/:id/publish', async (c) => {
   const id = c.req.param('id');
   const { publish } = await c.req.json<{ publish: boolean }>();
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db
     .update(courses)
@@ -191,7 +191,7 @@ admin.post('/courses/:id/publish', async (c) => {
 /** Delete a course (and its modules/lessons via cascade, keep enrollments for records) */
 admin.delete('/courses/:id', async (c) => {
   const id = c.req.param('id');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   // Soft guard: only delete unpublished courses
   const course = await db.query.courses.findFirst({ where: eq(courses.id, id) });
@@ -221,7 +221,7 @@ admin.post('/courses/:courseId/modules', async (c) => {
 
   if (!body.title) return c.json({ error: 'title is required' }, 400);
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   // Auto-assign sortOrder if not provided
   const [{ maxOrder }] = await db
@@ -259,7 +259,7 @@ admin.put('/modules/:id', async (c) => {
     dripDelayDays?: number;
   }>();
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db
     .update(courseModules)
@@ -275,7 +275,7 @@ admin.put('/modules/:id', async (c) => {
 /** Delete a module */
 admin.delete('/modules/:id', async (c) => {
   const id = c.req.param('id');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const m = await db.query.courseModules.findFirst({ where: eq(courseModules.id, id) });
   if (!m) return c.json({ error: 'Module not found' }, 404);
@@ -311,7 +311,7 @@ admin.post('/modules/:moduleId/lessons', async (c) => {
 
   if (!body.title) return c.json({ error: 'title is required' }, 400);
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const module = await db.query.courseModules.findFirst({ where: eq(courseModules.id, moduleId) });
   if (!module) return c.json({ error: 'Module not found' }, 404);
@@ -359,7 +359,7 @@ admin.put('/lessons/:id', async (c) => {
     isFree?: boolean;
   }>();
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db
     .update(lessons)
@@ -375,7 +375,7 @@ admin.put('/lessons/:id', async (c) => {
 /** Delete a lesson */
 admin.delete('/lessons/:id', async (c) => {
   const id = c.req.param('id');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const lesson = await db.query.lessons.findFirst({ where: eq(lessons.id, id) });
   if (!lesson) return c.json({ error: 'Lesson not found' }, 404);
@@ -402,7 +402,7 @@ admin.delete('/lessons/:id', async (c) => {
 
 /** List all enrollments with student + course info */
 admin.get('/enrollments', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const courseId = c.req.query('courseId');
   const status = c.req.query('status');
@@ -444,7 +444,7 @@ admin.post('/enrollments', async (c) => {
   const { userId, courseId } = await c.req.json<{ userId: string; courseId: string }>();
   if (!userId || !courseId) return c.json({ error: 'userId and courseId are required' }, 400);
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [enrollment] = await db
     .insert(enrollments)
@@ -473,7 +473,7 @@ admin.put('/enrollments/:id', async (c) => {
     status: 'active' | 'paused' | 'completed' | 'expired' | 'refunded';
   }>();
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db
     .update(enrollments)
@@ -499,7 +499,7 @@ admin.put('/enrollments/:id', async (c) => {
 /** Get a student's progress on a course */
 admin.get('/students/:userId/progress/:courseId', async (c) => {
   const { userId, courseId } = c.req.param();
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const enrollment = await db.query.enrollments.findFirst({
     where: (e, { and }) => and(eq(e.userId, userId), eq(e.courseId, courseId)),
@@ -553,7 +553,7 @@ admin.get('/students/:userId/progress/:courseId', async (c) => {
 
 /** Course analytics overview */
 admin.get('/analytics', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [totals] = await db
     .select({

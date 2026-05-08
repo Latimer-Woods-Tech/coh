@@ -18,7 +18,7 @@ comms.post('/appointments/send-reminders', authMiddleware, async (c) => {
     return c.json({ error: 'Unauthorized' }, 403);
   }
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   // Get appointments in next 24 hours that haven't been reminded
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -91,7 +91,7 @@ comms.post('/events/send-reminders', authMiddleware, async (c) => {
     return c.json({ error: 'Unauthorized' }, 403);
   }
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   // Get events in next 24 hours whose registrants haven't been reminded
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -163,7 +163,7 @@ comms.post(
       return c.json({ error: 'Unauthorized' }, 403);
     }
 
-    const { eventId } = c.req.valid('param');  const userId = c.get('userId');    const db = createDb(c.env.HYPERDRIVE);
+    const { eventId } = c.req.valid('param');  const userId = c.get('userId');    const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
     const [event] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
     if (!event) {
@@ -208,7 +208,7 @@ comms.get('/events/:eventId/video-room', async (c) => {
   const userId = c.get('userId');
   const { eventId } = c.req.param();
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   // Check if user is registered
   const [registration] = await db

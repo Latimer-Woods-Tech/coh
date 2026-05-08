@@ -17,7 +17,7 @@ adminEvents.use('*', adminOnly);
 // ─────────────────────────────────────
 
 adminEvents.get('/events', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
   const offset = (page - 1) * limit;
@@ -45,7 +45,7 @@ adminEvents.post('/events', zValidator('json', z.object({
   timezone: z.string().default('America/New_York'),
 })), async (c) => {
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [event] = await db.insert(events).values({
     ...body,
@@ -79,7 +79,7 @@ adminEvents.put('/events/:id', zValidator('json', z.object({
 })), async (c) => {
   const id = c.req.param('id');
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(events)
     .set({
@@ -99,7 +99,7 @@ adminEvents.patch('/events/:id/status', zValidator('json', z.object({
 })), async (c) => {
   const id = c.req.param('id');
   const { status } = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(events)
     .set({ status, updatedAt: new Date() })
@@ -120,7 +120,7 @@ adminEvents.patch('/events/:id/status', zValidator('json', z.object({
 
 adminEvents.get('/events/:id/registrations', async (c) => {
   const id = c.req.param('id');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const registrations = await db
     .select({
@@ -145,7 +145,7 @@ adminEvents.get('/events/:id/registrations', async (c) => {
 // ─────────────────────────────────────
 
 adminEvents.get('/users', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
   const offset = (page - 1) * limit;
@@ -171,7 +171,7 @@ adminEvents.get('/users', async (c) => {
 
 adminEvents.get('/users/:id', async (c) => {
   const id = c.req.param('id');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [user] = await db.select({
     id: users.id,
@@ -200,7 +200,7 @@ adminEvents.patch('/users/:id', zValidator('json', z.object({
 })), async (c) => {
   const id = c.req.param('id');
   const updates = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(users)
     .set({

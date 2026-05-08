@@ -50,7 +50,7 @@ const refreshSchema = z.object({
 // ─── POST: Sign Up ───
 auth.post('/signup', authWriteRateLimit, zValidator('json', signupSchema), async (c) => {
   const { email, password, name } = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   try {
     // Check if user exists
@@ -106,7 +106,7 @@ auth.post('/signup', authWriteRateLimit, zValidator('json', signupSchema), async
 // ─── POST: Login ───
 auth.post('/login', authWriteRateLimit, zValidator('json', loginSchema), async (c) => {
   const { email, password } = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   try {
     // Find user
@@ -197,7 +197,7 @@ auth.post('/refresh-token', authWriteRateLimit, zValidator('json', refreshSchema
 // ─── GET: Me (Current User) ───
 auth.get('/me', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   try {
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
@@ -231,7 +231,7 @@ const updateProfileSchema = z.object({
 auth.put('/me', authMiddleware, zValidator('json', updateProfileSchema), async (c) => {
   const userId = c.get('userId')!;
   const updates = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   try {
     const [updated] = await db
@@ -264,7 +264,7 @@ auth.post('/forgot-password', authWriteRateLimit, zValidator('json', z.object({
   email: z.string().email(),
 })), async (c) => {
   const { email } = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   // Always return 200 to prevent email enumeration
   const [user] = await db.select({ id: users.id, name: users.name, email: users.email })
@@ -300,7 +300,7 @@ auth.post('/reset-password', authWriteRateLimit, zValidator('json', z.object({
   if (!userId) return c.json({ error: 'Token is invalid or has expired' }, 400);
 
   const passwordHash = await hashPassword(password);
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(users)
     .set({ passwordHash, updatedAt: new Date() })
@@ -319,7 +319,7 @@ auth.post('/magic-link/request', authWriteRateLimit, zValidator('json', z.object
   email: z.string().email(),
 })), async (c) => {
   const { email } = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   let [user] = await db.select({ id: users.id, name: users.name, email: users.email })
     .from(users).where(eq(users.email, email)).limit(1);
@@ -364,7 +364,7 @@ auth.post('/magic-link/verify', authWriteRateLimit, zValidator('json', z.object(
   // One-time use: delete immediately (before issuing JWT) to prevent replay
   await c.env.SESSIONS.delete(`magic-link:${token}`);
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user) return c.json({ error: 'User not found' }, 404);
 

@@ -15,7 +15,7 @@ adminStore.use('*', adminOnly);
 // ─── Products ───
 
 adminStore.get('/products', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
   const offset = (page - 1) * limit;
@@ -43,7 +43,7 @@ adminStore.post('/products', zValidator('json', z.object({
   sortOrder: z.number().int().default(0),
 })), async (c) => {
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [product] = await db.insert(products).values(body).returning();
 
@@ -73,7 +73,7 @@ adminStore.put('/products/:id', zValidator('json', z.object({
 })), async (c) => {
   const id = c.req.param('id');
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(products)
     .set({ ...body, updatedAt: new Date() })
@@ -86,7 +86,7 @@ adminStore.put('/products/:id', zValidator('json', z.object({
 
 adminStore.delete('/products/:id', async (c) => {
   const id = c.req.param('id');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(products)
     .set({ isActive: false, updatedAt: new Date() })
@@ -106,7 +106,7 @@ adminStore.post('/categories', zValidator('json', z.object({
   sortOrder: z.number().int().default(0),
 })), async (c) => {
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [category] = await db.insert(productCategories).values(body).returning();
   return c.json({ category }, 201);
@@ -115,7 +115,7 @@ adminStore.post('/categories', zValidator('json', z.object({
 // ─── Orders ───
 
 adminStore.get('/orders', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const status = c.req.query('status');
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
@@ -138,7 +138,7 @@ adminStore.patch('/orders/:id', zValidator('json', z.object({
 })), async (c) => {
   const id = c.req.param('id');
   const updates = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(orders)
     .set({ ...updates, updatedAt: new Date() })
@@ -161,7 +161,7 @@ adminStore.patch('/orders/:id', zValidator('json', z.object({
 // ─── Coupons ───
 
 adminStore.get('/coupons', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const data = await db.select().from(coupons).orderBy(desc(coupons.createdAt));
   return c.json({ data });
 });
@@ -177,7 +177,7 @@ adminStore.post('/coupons', zValidator('json', z.object({
   expiresAt: z.string().datetime().optional(),
 })), async (c) => {
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [coupon] = await db.insert(coupons).values({
     ...body,
@@ -197,7 +197,7 @@ adminStore.put('/coupons/:id', zValidator('json', z.object({
 })), async (c) => {
   const id = c.req.param('id');
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(coupons)
     .set({ ...body, expiresAt: body.expiresAt ? new Date(body.expiresAt) : undefined })

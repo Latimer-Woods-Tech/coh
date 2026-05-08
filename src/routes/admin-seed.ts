@@ -25,7 +25,7 @@ adminSeed.post('/seed', authMiddleware, adminOnly, async (c) => {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const results: Record<string, any> = {};
 
   try {
@@ -413,7 +413,7 @@ Duration: 12-18 hours (self-paced)`,
 // ─── GET: Seed Status ───
 adminSeed.get('/seed/status', authMiddleware, adminOnly, async (c) => {
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   try {
     const userList = await db.select().from(users);

@@ -10,7 +10,7 @@ const academy = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ─── Public: List published courses ───
 academy.get('/courses', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
   const offset = (page - 1) * limit;
@@ -30,7 +30,7 @@ academy.get('/courses/:slug', optionalAuth, async (c) => {
   const slug = c.req.param('slug');
   if (!slug) return c.json({ error: 'Course slug is required' }, 400);
   const userId = c.get('userId');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [course] = await db.select().from(courses).where(eq(courses.slug, slug)).limit(1);
   if (!course) return c.json({ error: 'Course not found' }, 404);
@@ -78,7 +78,7 @@ academy.post('/courses/:slug/enroll', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
   const slug = c.req.param('slug');
   if (!slug) return c.json({ error: 'Course slug is required' }, 400);
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   try {
     const [course] = await db.select().from(courses).where(eq(courses.slug, slug)).limit(1);
@@ -157,7 +157,7 @@ academy.post('/lessons/:lessonId/complete', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
   const lessonId = c.req.param('lessonId');
   if (!lessonId) return c.json({ error: 'Lesson ID is required' }, 400);
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   await db.insert(lessonProgress).values({
     userId,
@@ -182,7 +182,7 @@ academy.post('/lessons/:lessonId/complete', authMiddleware, async (c) => {
 // ─── Auth: Get my enrollments ───
 academy.get('/enrollments', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
   const offset = (page - 1) * limit;

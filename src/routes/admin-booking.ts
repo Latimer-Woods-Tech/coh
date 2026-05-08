@@ -15,7 +15,7 @@ adminBooking.use('*', adminOnly);
 // ─── Appointments ───
 
 adminBooking.get('/appointments', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const status = c.req.query('status');
   const date = c.req.query('date'); // YYYY-MM-DD
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
@@ -49,7 +49,7 @@ adminBooking.patch('/appointments/:id', zValidator('json', z.object({
 })), async (c) => {
   const id = c.req.param('id');
   const updates = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(appointments)
     .set({ ...updates, updatedAt: new Date() })
@@ -72,7 +72,7 @@ adminBooking.patch('/appointments/:id', zValidator('json', z.object({
 // ─── Services ───
 
 adminBooking.get('/services', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const data = await db.select().from(services).orderBy(services.sortOrder);
   return c.json({ data });
 });
@@ -87,7 +87,7 @@ adminBooking.post('/services', zValidator('json', z.object({
   sortOrder: z.number().int().optional(),
 })), async (c) => {
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [service] = await db.insert(services).values(body).returning();
 
@@ -114,7 +114,7 @@ adminBooking.put('/services/:id', zValidator('json', z.object({
 })), async (c) => {
   const id = c.req.param('id');
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(services).set(body).where(eq(services.id, id)).returning();
   if (!updated) return c.json({ error: 'Service not found' }, 404);
@@ -124,7 +124,7 @@ adminBooking.put('/services/:id', zValidator('json', z.object({
 
 adminBooking.delete('/services/:id', async (c) => {
   const id = c.req.param('id');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(services)
     .set({ isActive: false })
@@ -138,7 +138,7 @@ adminBooking.delete('/services/:id', async (c) => {
 // ─── Availability Slots ───
 
 adminBooking.get('/availability', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const data = await db.select().from(availabilitySlots).orderBy(availabilitySlots.dayOfWeek);
   return c.json({ data });
 });
@@ -149,7 +149,7 @@ adminBooking.post('/availability', zValidator('json', z.object({
   endTime: z.string().regex(/^\d{2}:\d{2}$/),
 })), async (c) => {
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [slot] = await db.insert(availabilitySlots).values(body).returning();
   return c.json({ slot }, 201);
@@ -163,7 +163,7 @@ adminBooking.put('/availability/:id', zValidator('json', z.object({
 })), async (c) => {
   const id = c.req.param('id');
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(availabilitySlots).set(body).where(eq(availabilitySlots.id, id)).returning();
   if (!updated) return c.json({ error: 'Slot not found' }, 404);

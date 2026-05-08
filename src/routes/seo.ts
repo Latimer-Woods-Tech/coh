@@ -25,7 +25,7 @@ seo.get('/sitemap.xml', async (c) => {
 
   let dynamicPaths: string[] = [];
   try {
-    const db = createDb(c.env.HYPERDRIVE);
+    const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
     const [publishedCourses, activeProducts, upcomingEvents] = await Promise.all([
       db.select({ slug: courses.slug }).from(courses).where(eq(courses.isPublished, true)),
       db.select({ slug: products.slug }).from(products).where(eq(products.isActive, true)),

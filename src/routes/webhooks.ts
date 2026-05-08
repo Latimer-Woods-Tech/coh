@@ -50,7 +50,7 @@ webhooks.post('/stripe', async (c) => {
     return c.json({ error: 'Invalid Stripe webhook signature' }, 400);
   }
 
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   if (await isStripeEventAlreadyProcessed(c.env, event.id)) {
     return c.json({ received: true, duplicate: true }, 200);

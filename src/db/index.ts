@@ -4,7 +4,14 @@ import * as schema from './schema';
 
 export type Database = ReturnType<typeof createDb>;
 
-export function createDb(hyperdrive: Hyperdrive) {
-  const pool = new Pool({ connectionString: hyperdrive.connectionString });
+/**
+ * Build a Drizzle DB client. Accepts either:
+ *   - A Hyperdrive binding (preferred when its WebSocket proxy is healthy)
+ *   - A plain postgres connection string (used by the migration runner +
+ *     fallback when Hyperdrive's WS handshake is failing).
+ */
+export function createDb(connection: Hyperdrive | string) {
+  const connectionString = typeof connection === 'string' ? connection : connection.connectionString;
+  const pool = new Pool({ connectionString });
   return drizzle(pool, { schema });
 }

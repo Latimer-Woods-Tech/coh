@@ -12,7 +12,7 @@ const subscriptionsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ─── Public: List membership plans ───
 subscriptionsRouter.get('/plans', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const plans = await db.select().from(membershipPlans).where(eq(membershipPlans.isActive, true));
   return c.json({ plans });
 });
@@ -20,7 +20,7 @@ subscriptionsRouter.get('/plans', async (c) => {
 // ─── Auth: Get my subscription ───
 subscriptionsRouter.get('/my-subscription', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [subscription] = await db.select().from(subscriptions)
     .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, 'active')))
@@ -36,7 +36,7 @@ subscriptionsRouter.post('/subscribe', authMiddleware, zValidator('json', z.obje
 })), async (c) => {
   const userId = c.get('userId')!;
   const { planId, interval } = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [plan] = await db.select().from(membershipPlans)
     .where(and(eq(membershipPlans.id, planId), eq(membershipPlans.isActive, true)))
@@ -93,7 +93,7 @@ subscriptionsRouter.post('/subscribe', authMiddleware, zValidator('json', z.obje
 // ─── Auth: Cancel subscription ───
 subscriptionsRouter.post('/cancel', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [subscription] = await db.select().from(subscriptions)
     .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, 'active')))

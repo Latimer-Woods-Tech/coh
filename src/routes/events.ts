@@ -27,7 +27,7 @@ function serializeIntakeResponsesForMetadata(intakeResponses: unknown) {
 
 // ─── Public: List upcoming events ───
 eventsRouter.get('/', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const type = c.req.query('type'); // webinar, workshop, consultation
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
@@ -54,7 +54,7 @@ eventsRouter.get('/:slug', optionalAuth, async (c) => {
   const slug = c.req.param('slug');
   if (!slug) return c.json({ error: 'Event slug is required' }, 400);
   const userId = c.get('userId');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [event] = await db.select().from(events).where(eq(events.slug, slug)).limit(1);
   if (!event) return c.json({ error: 'Event not found' }, 404);
@@ -84,7 +84,7 @@ eventsRouter.post('/:slug/register', authMiddleware, zValidator('json', z.object
   const slug = c.req.param('slug');
   if (!slug) return c.json({ error: 'Event slug is required' }, 400);
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   try {
     const [event] = await db.select().from(events).where(eq(events.slug, slug)).limit(1);
@@ -218,7 +218,7 @@ eventsRouter.post('/:slug/register', authMiddleware, zValidator('json', z.object
 // ─── Auth: Get my registrations ───
 eventsRouter.get('/my/registrations', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const myRegistrations = await db.select().from(eventRegistrations)
     .where(eq(eventRegistrations.userId, userId))

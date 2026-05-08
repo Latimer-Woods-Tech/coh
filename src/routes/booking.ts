@@ -19,7 +19,7 @@ const bookingWriteRateLimit = createRateLimitMiddleware({
 
 // ─── Public: List services ───
 booking.get('/services', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
   const offset = (page - 1) * limit;
@@ -40,7 +40,7 @@ booking.get('/availability', zValidator('query', z.object({
   serviceId: z.string().uuid(),
 })), async (c) => {
   const { date, serviceId } = c.req.valid('query');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const dayOfWeek = new Date(date).getDay();
   const slots = await db.select().from(availabilitySlots)
@@ -98,7 +98,7 @@ booking.post('/appointments', bookingWriteRateLimit, authMiddleware, zValidator(
 })), async (c) => {
   const userId = c.get('userId')!;
   const { serviceId, scheduledAt, notes } = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const stripe = new Stripe(c.env.STRIPE_SECRET_KEY);
   let appointmentId: string | null = null;
 
@@ -229,7 +229,7 @@ booking.post('/appointments', bookingWriteRateLimit, authMiddleware, zValidator(
 // ─── Auth: Get my appointments ───
 booking.get('/appointments', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
   const offset = (page - 1) * limit;
@@ -249,7 +249,7 @@ booking.patch('/appointments/:id/cancel', authMiddleware, async (c) => {
   const userId = c.get('userId')!;
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'Appointment ID is required' }, 400);
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(appointments)
     .set({ status: 'cancelled', updatedAt: new Date() })

@@ -100,7 +100,7 @@ adminAudio.post('/lessons/:lessonId', authMiddleware, zValidator('json', z.objec
   const { text, voiceId, modelId, stability, similarityBoost, force } = c.req.valid('json');
 
   try {
-    const db = createDb(c.env.HYPERDRIVE);
+    const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
     // Fetch lesson from database
     const [lesson] = await db.select().from(lessons).where(eq(lessons.id, lessonId)).limit(1);
@@ -203,7 +203,7 @@ adminAudio.post('/batch', authMiddleware, zValidator('json', z.object({
   }
 
   try {
-    const db = createDb(c.env.HYPERDRIVE);
+    const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
     // Fetch lessons to process
     let lessonsToProcess: typeof lessons.$inferSelect[] = [];

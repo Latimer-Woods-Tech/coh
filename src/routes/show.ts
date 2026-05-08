@@ -11,7 +11,7 @@ const show = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ─── Public: List published episodes ───
 show.get('/', async (c) => {
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
   const page = Math.max(1, parseInt(c.req.query('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') ?? '20')));
   const offset = (page - 1) * limit;
@@ -46,7 +46,7 @@ show.get('/', async (c) => {
 show.get('/:slug', optionalAuth, async (c) => {
   const slug = c.req.param('slug');
   if (!slug) return c.json({ error: 'Episode slug required' }, 400);
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [episode] = await db.select().from(episodes)
     .where(and(eq(episodes.slug, slug), eq(episodes.status, 'published')))
@@ -79,7 +79,7 @@ show.get('/:slug', optionalAuth, async (c) => {
 show.post('/:slug/view', async (c) => {
   const slug = c.req.param('slug');
   if (!slug) return c.json({ error: 'Episode slug required' }, 400);
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   await db.update(episodes)
     .set({ viewCount: sql`${episodes.viewCount} + 1` })
@@ -105,7 +105,7 @@ show.post('/', authMiddleware, adminOnly, zValidator('json', z.object({
   membershipGated: z.boolean().default(false),
 })), async (c) => {
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [episode] = await db.insert(episodes).values({ ...body, status: 'draft' }).returning();
 
@@ -135,7 +135,7 @@ show.put('/:id', authMiddleware, adminOnly, zValidator('json', z.object({
 })), async (c) => {
   const id = c.req.param('id');
   const body = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(episodes)
     .set({ ...body, updatedAt: new Date() })
@@ -152,7 +152,7 @@ show.post('/:id/publish', authMiddleware, adminOnly, zValidator('json', z.object
 })), async (c) => {
   const id = c.req.param('id');
   const { publish } = c.req.valid('json');
-  const db = createDb(c.env.HYPERDRIVE);
+  const db = createDb(c.env.DATABASE_URL ?? c.env.HYPERDRIVE);
 
   const [updated] = await db.update(episodes)
     .set({
