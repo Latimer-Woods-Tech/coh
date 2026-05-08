@@ -21,6 +21,7 @@ import adminBooking from './routes/admin-booking';
 import adminStore from './routes/admin-store';
 import adminEventsUsers from './routes/admin-events';
 import adminSeed from './routes/admin-seed';
+import adminDb from './routes/admin-db';
 import comms from './routes/communications';
 import adminAudio from './routes/admin-audio';
 import webhooks from './routes/webhooks';
@@ -137,6 +138,7 @@ app.route('/api/admin', adminEventsUsers);
 app.route('/api/admin/booking', adminBooking);
 app.route('/api/admin/store', adminStore);
 app.route('/api/admin/seed', adminSeed);
+app.route('/api/admin/db', adminDb);
 app.route('/api/comms', comms);
 app.route('/api/admin/audio', adminAudio);
 

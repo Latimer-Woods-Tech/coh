@@ -5,6 +5,12 @@
   "compatibility_date": "2026-03-27",
   "compatibility_flags": ["nodejs_compat"],
 
+  // Treat .sql files as text imports so we can embed the Drizzle migration
+  // SQL into the worker bundle and run it via the Hyperdrive binding.
+  "rules": [
+    { "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }
+  ],
+
   // Custom domain — never expose .workers.dev to end users
   "routes": [
     { "pattern": "api.cypherofhealing.com", "custom_domain": true }
