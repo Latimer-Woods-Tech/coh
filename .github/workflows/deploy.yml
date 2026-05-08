@@ -25,6 +25,11 @@ jobs:
       - name: Install backend dependencies
         run: npm install
 
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.NEON_CONNECTION_STRING }}
+        run: npm run db:migrate
+
       - name: Deploy backend to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
@@ -39,8 +44,9 @@ jobs:
       - name: Build frontend
         working-directory: ./web
         env:
-          VITE_API_URL: https://cypher-of-healing-api.workers.dev/api
+          VITE_API_URL: https://api.cypherofhealing.com/api
           VITE_STRIPE_PUBLIC_KEY: ${{ secrets.VITE_STRIPE_PUBLIC_KEY }}
+          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
         run: npm run build
 
       - name: Deploy frontend to Cloudflare Pages
@@ -51,12 +57,21 @@ jobs:
           command: pages deploy dist --project-name coh
           workingDirectory: './web'
 
+      - name: Verify backend health
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.cypherofhealing.com/)
+          if [ "$STATUS" != "200" ]; then
+            echo "Backend health check failed: HTTP $STATUS"
+            exit 1
+          fi
+          echo "Backend healthy: HTTP $STATUS"
+
       - name: Deployment notification
         if: success()
         run: |
-          echo "✅ Deployment successful!"
-          echo "Backend: https://cypher-of-healing-api.workers.dev"
-          echo "Frontend: https://coh.pages.dev"
+          echo "Deployment successful"
+          echo "Backend: https://api.cypherofhealing.com"
+          echo "Frontend: https://cypherofhealing.com"
 
       - name: Deployment failure notification
         if: failure()
