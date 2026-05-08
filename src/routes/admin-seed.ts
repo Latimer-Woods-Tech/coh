@@ -21,8 +21,8 @@ const adminSeed = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ─── POST: Seed Database ───
 adminSeed.post('/seed', authMiddleware, adminOnly, async (c) => {
-  if (c.env.ENVIRONMENT === 'production') {
-    return c.json({ error: 'Seed endpoint disabled in production' }, 403);
+  if (c.env.ENVIRONMENT !== 'development') {
+    return c.json({ error: 'Forbidden' }, 403);
   }
 
   const db = createDb(c.env.HYPERDRIVE);
