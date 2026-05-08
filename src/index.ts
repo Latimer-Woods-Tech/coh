@@ -8,6 +8,7 @@ import { responseMiddleware, errorResponse } from './middleware/response';
 import { createErrorHandler, ErrorCodes } from './middleware/errors';
 
 import auth from './routes/auth';
+import subscriptions from './routes/subscriptions';
 import booking from './routes/booking';
 import store from './routes/store';
 import academy from './routes/academy';
@@ -115,6 +116,7 @@ app.get('/api/docs', (c) => {
 // ─── API Routes ───
 // ─── Route Mounting ───
 app.route('/api/auth', auth);
+app.route('/api/subscriptions', subscriptions);
 app.route('/api/booking', booking);
 app.route('/api/store', store);
 app.route('/api/academy', academy);

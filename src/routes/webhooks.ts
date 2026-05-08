@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { and, eq } from 'drizzle-orm';
 import Stripe from 'stripe';
 import { createDb } from '../db';
-import { activityLog, appointments, enrollments, eventRegistrations, events, orders, services, users } from '../db/schema';
+import { activityLog, appointments, enrollments, eventRegistrations, events, membershipPlans, orders, services, subscriptions, users } from '../db/schema';
 import { bookingConfirmationEmail, eventRegistrationEmail, sendEmail } from '../utils/email';
 import type { Env, Variables } from '../types/env';
 
@@ -355,6 +355,95 @@ webhooks.post('/stripe', async (c) => {
           });
         }
       }
+    }
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const completedSession = event.data.object as Stripe.Checkout.Session;
+    if (completedSession.mode === 'subscription' && completedSession.metadata?.userId && completedSession.metadata?.planId) {
+      const { userId, planId, planTier } = completedSession.metadata;
+      const stripeSubscriptionId = typeof completedSession.subscription === 'string'
+        ? completedSession.subscription
+        : completedSession.subscription?.id ?? null;
+
+      if (stripeSubscriptionId) {
+        const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+        const [sub] = await db.insert(subscriptions).values({
+          userId,
+          planId,
+          status: 'active',
+          stripeSubscriptionId,
+          currentPeriodStart: stripeSub.current_period_start ? new Date(stripeSub.current_period_start * 1000) : undefined,
+          currentPeriodEnd: stripeSub.current_period_end ? new Date(stripeSub.current_period_end * 1000) : undefined,
+        }).returning({ id: subscriptions.id });
+
+        await db.update(users)
+          .set({ membershipTier: planTier as 'vip' | 'inner_circle', updatedAt: new Date() })
+          .where(eq(users.id, userId));
+
+        await db.insert(activityLog).values({
+          userId,
+          action: 'subscription.created',
+          resourceType: 'subscription',
+          resourceId: sub.id,
+          metadata: { planId, planTier, stripeSubscriptionId },
+        });
+      }
+    }
+  }
+
+  if (event.type === 'customer.subscription.updated') {
+    const sub = event.data.object as Stripe.Subscription;
+    const [existing] = await db.select({ id: subscriptions.id, userId: subscriptions.userId })
+      .from(subscriptions)
+      .where(eq(subscriptions.stripeSubscriptionId, sub.id))
+      .limit(1);
+
+    if (existing) {
+      const newStatus = sub.cancel_at_period_end ? 'cancelled' : (sub.status === 'active' ? 'active' : sub.status as 'past_due' | 'paused');
+      await db.update(subscriptions)
+        .set({
+          status: newStatus,
+          currentPeriodStart: sub.current_period_start ? new Date(sub.current_period_start * 1000) : undefined,
+          currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : undefined,
+          cancelledAt: sub.cancel_at_period_end ? new Date() : undefined,
+          updatedAt: new Date(),
+        })
+        .where(eq(subscriptions.id, existing.id));
+
+      await db.insert(activityLog).values({
+        userId: existing.userId,
+        action: `subscription.${newStatus}`,
+        resourceType: 'subscription',
+        resourceId: existing.id,
+        metadata: { stripeSubscriptionId: sub.id, stripeStatus: sub.status },
+      });
+    }
+  }
+
+  if (event.type === 'customer.subscription.deleted') {
+    const sub = event.data.object as Stripe.Subscription;
+    const [existing] = await db.select({ id: subscriptions.id, userId: subscriptions.userId })
+      .from(subscriptions)
+      .where(eq(subscriptions.stripeSubscriptionId, sub.id))
+      .limit(1);
+
+    if (existing) {
+      await db.update(subscriptions)
+        .set({ status: 'cancelled', cancelledAt: new Date(), updatedAt: new Date() })
+        .where(eq(subscriptions.id, existing.id));
+
+      await db.update(users)
+        .set({ membershipTier: 'free', updatedAt: new Date() })
+        .where(eq(users.id, existing.userId));
+
+      await db.insert(activityLog).values({
+        userId: existing.userId,
+        action: 'subscription.expired',
+        resourceType: 'subscription',
+        resourceId: existing.id,
+        metadata: { stripeSubscriptionId: sub.id },
+      });
     }
   }
 
