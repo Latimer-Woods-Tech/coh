@@ -81,6 +81,40 @@ adminDb.post('/migrate', async (c) => {
   }
 });
 
+/**
+ * Reset the schema by dropping the public schema and re-creating it.
+ * Open while users.count = 0 (same gate as /migrate). Useful when the
+ * existing schema has drifted from the current Drizzle definition.
+ *
+ * POST /__db/reset
+ */
+adminDb.post('/reset', async (c) => {
+  const connection = c.env.DATABASE_URL ?? c.env.HYPERDRIVE.connectionString;
+  const pool = new Pool({ connectionString: connection });
+  try {
+    // Refuse if there are any real users (data loss guard)
+    try {
+      const { rows } = await pool.query<{ count: string }>('SELECT COUNT(*)::text AS count FROM users');
+      if ((rows[0]?.count ?? '0') !== '0') {
+        return c.json({ error: 'Refusing to reset — users table has data' }, 403);
+      }
+    } catch {
+      // No users table yet — proceed
+    }
+
+    await pool.query('DROP SCHEMA public CASCADE');
+    await pool.query('CREATE SCHEMA public');
+    await pool.query('GRANT ALL ON SCHEMA public TO neondb_owner');
+    await pool.query('GRANT ALL ON SCHEMA public TO public');
+
+    return c.json({ ok: true, reset: true });
+  } catch (error) {
+    return c.json({ ok: false, error: error instanceof Error ? error.message : String(error) }, 500);
+  } finally {
+    await pool.end();
+  }
+});
+
 // Diagnostic — confirms the worker is running my latest code + that
 // Hyperdrive connection string is reachable. Open route, no secrets in
 // the response body.
