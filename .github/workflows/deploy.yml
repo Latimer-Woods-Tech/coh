@@ -35,6 +35,8 @@ jobs:
           workingDirectory: '.'
           secrets: |
             STRIPE_SECRET_KEY
+            STRIPE_WEBHOOK_SECRET
+            JWT_SECRET
             RESEND_API_KEY
             TELNYX_API_KEY
             ELEVENLABS_API_KEY
@@ -44,6 +46,8 @@ jobs:
             CLOUDFLARE_API
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           TELNYX_API_KEY: ${{ secrets.TELNYX_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
