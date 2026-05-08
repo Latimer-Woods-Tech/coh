@@ -40,6 +40,12 @@
     "APP_NAME": "CypherOfHealing"
   }
 
+  // Cron: send SMS reminders for appointments in the next 24 hours
+  // Runs every hour — skips appointments already reminded (reminderSentAt IS NOT NULL)
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
+
   // Secrets to configure:
   // wrangler secret put STRIPE_SECRET_KEY
   // wrangler secret put STRIPE_WEBHOOK_SECRET

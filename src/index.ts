@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid';
 import type { Env, Variables } from './types/env';
 import { responseMiddleware, errorResponse } from './middleware/response';
 import { createErrorHandler, ErrorCodes } from './middleware/errors';
+import { sendAppointmentReminders } from './utils/reminders';
 
 import auth from './routes/auth';
 import subscriptions from './routes/subscriptions';
@@ -139,4 +140,9 @@ app.notFound((c) => {
 // ─── Error handler ───
 app.onError((err, c) => createErrorHandler(c.env.ENVIRONMENT === 'development')(err, c));
 
-export default app;
+export default {
+  fetch: app.fetch.bind(app),
+  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(sendAppointmentReminders(env));
+  },
+};
