@@ -39,6 +39,9 @@ jobs:
             JWT_SECRET
             RESEND_API_KEY
             TELNYX_API_KEY
+            TELNYX_CONNECTION_ID
+            TELNYX_PHONE_NUMBER
+            TELNYX_PUBLIC_KEY
             ELEVENLABS_API_KEY
             ELEVEN_LABS_VOICE_ID
             SENTRY_DSN
@@ -50,6 +53,9 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           TELNYX_API_KEY: ${{ secrets.TELNYX_API_KEY }}
+          TELNYX_CONNECTION_ID: ${{ secrets.TELNYX_CONNECTION_ID }}
+          TELNYX_PHONE_NUMBER: ${{ secrets.TELNYX_PHONE_NUMBER }}
+          TELNYX_PUBLIC_KEY: ${{ secrets.TELNYX_PUBLIC_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           ELEVEN_LABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_CYPHER }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_CYPHER_HEALING }}
